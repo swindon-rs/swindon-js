@@ -5,13 +5,13 @@ import assert from 'assert';
 import sinon from 'sinon';
 import { Server } from 'mock-socket';
 
-import Swindon from '../lib/swindon';
+import Swindon from './../lib/swindon';
 
 // Serve info
 const debugMode = false;
 const textAlign = '    ';
 
-// Client Info
+// Client Info, common
 const msgMethod = 'send_message';
 const serverInfo = [1, 2, 3, 4, 5];
 const message = { body: 'Hi there' };
