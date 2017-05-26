@@ -1,14 +1,9 @@
 before_script:
   - vagga _init_storage_dir --allow-multiple swindonJS
 stages:
-  - build
   - test
   - cleanup
 test:
-  stage: build
-  script:
-  - vagga build
-test:
   stage: test
   script:
-  - vagga test
+  - vagga build && vagga test
