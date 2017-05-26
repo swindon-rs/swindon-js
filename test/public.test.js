@@ -5,7 +5,7 @@ import assert from 'assert';
 import sinon from 'sinon';
 import { Server } from 'mock-socket';
 
-import Swindon from './../src/swindon';
+import Swindon from './../lib/swindon';
 
 // Serve info
 const debugMode = false;
