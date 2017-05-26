@@ -1,0 +1,36 @@
+containers:
+  base:
+    environ:
+      NODE_PATH: /usr/lib/node_modules
+    setup:
+    - !UbuntuRelease { codename: trusty }
+    - !Install [ca-certificates, build-essential, gyp]
+    - !AptTrust
+      keys: [1655A0AB68576280]
+    - !UbuntuRepo
+      url: https://deb.nodesource.com/node_6.x
+      suite: trusty
+      components: [main]
+    - !Install [nodejs]
+    - !NpmConfig
+      install-node: false
+    - !NpmDependencies
+      package: true
+      dev: true
+      optional: true
+commands:
+  build: !Command
+    description: Build for node
+    container: base
+    environ:
+      NODE_ENV: production
+    run: |
+      node rollup.js
+  test: !Command
+    description: Running tests
+    container: base
+    environ:
+      BABEL_DISABLE_CACHE: 1
+      NODE_ENV: test
+    run: |
+      mocha --compilers js:babel-register --timeout 15000

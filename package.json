@@ -1,0 +1,40 @@
+{
+  "name": "@evo/swindon",
+  "version": "0.0.1",
+  "description": "Lightweight ws wrapper",
+  "main": "lib/swindon.js",
+  "scripts": {
+    "prepublish": "vagga build",
+    "preversion": "vagga lint && vagga test",
+    "test": "mocha --compilers js:babel-register --timeout 1500"
+  },
+  "keywords": [
+    "websocket",
+    "swindon"
+  ],
+  "author": {
+    "name": ""
+  },
+  "peerDependencies": {
+    "webpack": "2.0.0"
+  },
+  "devDependencies": {
+    "assert": "^1.4.1",
+    "babel-core": "6.24.1",
+    "babel-loader": "7.0.0",
+    "babel-plugin-transform-runtime": "6.23.0",
+    "babel-preset-es2015-rollup": "3.0.0",
+    "babel-preset-stage-0": "6.24.1",
+    "babel-register": "6.24.1",
+    "lodash": "4.17.4",
+    "mocha": "2.5.3",
+    "mock-socket": "6.0.4",
+    "rollup": "0.41.6",
+    "rollup-plugin-babel": "2.7.1",
+    "rollup-plugin-commonjs": "8.0.2",
+    "sinon": "2.2.0"
+  },
+  "dependencies": {
+    "babel-runtime": "6.23.0"
+  }
+}
