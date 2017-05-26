@@ -113,7 +113,7 @@ Swindon.prototype.send = function(method, args, kwargs) {
     });
   } else {
     console.error('Ooops! Swindon is not connected ;(');
-    val = null;
+    val = new Promise((_, reject) => reject());
   }
 
   return val;
