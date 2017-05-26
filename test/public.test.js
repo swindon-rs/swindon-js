@@ -11,7 +11,7 @@ import Swindon from '../lib/swindon';
 const debugMode = false;
 const textAlign = '    ';
 
-// Client Info
+// Client Info, common
 const msgMethod = 'send_message';
 const serverInfo = [1, 2, 3, 4, 5];
 const message = { body: 'Hi there' };
