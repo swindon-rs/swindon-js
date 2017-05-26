@@ -1,0 +1,5 @@
+.idea
+.vagga
+vagga.yaml
+node_modules
+.gitlab-ci.yml

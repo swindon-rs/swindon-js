@@ -1,12 +1,14 @@
 {
   "name": "@evo/swindon",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "Lightweight ws wrapper",
   "main": "lib/swindon.js",
   "scripts": {
-    "prepublish": "vagga build",
-    "preversion": "vagga lint && vagga test",
-    "test": "mocha --compilers js:babel-register --timeout 1500"
+    "prepublish": "npm run test",
+    "pretest": "npm run build",
+    "build": "node rollup.js",
+    "prebuild": "rm -rf lib/*",
+    "test": "mocha --compilers js:babel-register"
   },
   "keywords": [
     "websocket",

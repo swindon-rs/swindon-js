@@ -84,7 +84,6 @@ function swindonPublicActionsList() {
         it('should send data, and receive result', (done) => {
             oSwindon.send(msgMethod, serverInfo, message)
             .then((data) => {
-                console.log('ALARM!!!!!!!!!!!',data);
                 assert(serverStorage.method === msgMethod && (
                     _.isEqual(serverStorage.requestInfo, serverInfo)) && (
                         _.isEqual(serverStorage.message, message)
