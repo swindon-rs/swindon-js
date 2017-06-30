@@ -6,7 +6,7 @@ const SERVER_TIMEOUT = 10 * SECOND;
 const CONNECTION = '__conn__';
 
 export default class Swindon {
-  constructor (url, handlers, options) {
+  constructor(url, handlers, options) {
     this.url = url;
     this.options = Object.assign({
       debug: false,
@@ -85,7 +85,7 @@ export default class Swindon {
     });
   }
 
-  send(method, args, kwargs) {
+  call(method, args, kwargs) {
     let val;
     if (this.isConnected()) {
       val = new Promise((resolve, reject) => {

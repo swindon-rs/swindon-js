@@ -82,7 +82,7 @@ describe('Swindon connection action', () => {
 function swindonPublicActionsList() {
     describe('Swindon Public actions', () => {
         it('should send data, and receive result', (done) => {
-            oSwindon.send(msgMethod, serverInfo, message)
+            oSwindon.call(msgMethod, serverInfo, message)
             .then((data) => {
                 assert(serverStorage.method === msgMethod && (
                     _.isEqual(serverStorage.requestInfo, serverInfo)) && (

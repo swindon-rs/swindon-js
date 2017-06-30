@@ -29,6 +29,7 @@ commands:
   test: !Command
     description: Running tests
     container: base
+    prerequisites: [build]
     environ:
       BABEL_DISABLE_CACHE: 1
       NODE_ENV: test
