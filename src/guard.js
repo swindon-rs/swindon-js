@@ -22,7 +22,8 @@ export class _Guard {
   }
   close() {
     let conn = this._connection;
-    this.connection = null
+    let swindon = this._swindon;
+    this._connection = null
     for(let cleanup of this._cleanup.splice(0, this._cleanup.length)) {
       cleanup()
     }
@@ -30,6 +31,10 @@ export class _Guard {
       for(let call of this._backend_deinit) {
         conn.call(call.method_name, call.positional_args, call.keyword_args)
       }
+    }
+    if(swindon) {
+      swindon._remove_guard(this)
+      this._swindon = null
     }
   }
   _subscribe() {

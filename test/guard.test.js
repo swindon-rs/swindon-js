@@ -1,12 +1,15 @@
 import assert from 'assert';
+import sinon from 'sinon';
 import { connection } from './mock-swindon';
 import { _Guard } from './../lib/swindon';
+
 
 describe('Basic guard', () => {
   it('init-listen-deinit', () => {
 
     let conn = connection()
-    let guard = new _Guard({_connection: conn})
+    let swindon = {_connection: conn, _remove_guard: sinon.spy()}
+    let guard = new _Guard(swindon)
       .init('notifications.subscribe', ['yyy.zzz'])
       .listen('notifications.yyy.zzz', message => {
          this.setState(message.n_notifications)
@@ -21,6 +24,8 @@ describe('Basic guard', () => {
     guard.close()
     assert(conn._mock_unsubscribe.calledWith())
     assert(conn.call.calledWith('notifications.unsubscribe', ['yyy.zzz']))
+
+    assert(swindon._remove_guard.calledWith(guard))
 
   });
 });
