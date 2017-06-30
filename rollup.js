@@ -10,6 +10,9 @@ const moduleName = 'swindon';
 const plugins = [
   babel({
     "presets": [ "es2015-rollup", "stage-0" ],
+    "plugins": [
+      ["transform-es2015-classes", { "loose": true }],
+    ],
     "babelrc": false
   }),
   commonjs(),
