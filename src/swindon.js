@@ -23,7 +23,7 @@ export default class Swindon {
       onClose: 0,
     };
     // in seconds
-    this.reconnectTimouts = [0, 2, 4];
+    this.reconnectTimeouts = [0, 2, 4];
     this.requests = new Map();
 
     if (handlers) {
@@ -39,7 +39,7 @@ export default class Swindon {
     return !!(this.ws && this.ws.readyState === WebSocket.OPEN);
   }
 
-  fullfillPromise(key, resolution, payload) {
+  fulfillPromise(key, resolution, payload) {
     if (this.requests.has(key)) {
       const fulfiller = this.requests.get(key)[resolution];
       fulfiller(payload);
@@ -53,7 +53,7 @@ export default class Swindon {
       const url = this.url;
       const ws = new WebSocket(url);
       ws.onopen = () => {
-        this.fullfillPromise(CONNECTION, RESOLVE, null);
+        this.fulfillPromise(CONNECTION, RESOLVE, null);
         this.reconnectAttempts.onError = 0;
         this.reconnectAttempts.onClose = 0;
       };
@@ -62,13 +62,13 @@ export default class Swindon {
         this.parseMessage(json);
       };
       ws.onerror = () => {
-        this.fullfillPromise(CONNECTION, REJECT, null);
+        this.fulfillPromise(CONNECTION, REJECT, null);
         if (this.options.reconnectOnError && (
             this.reconnectAttempts.onError < RECONNECT_LIMIT)) {
           setTimeout(() => {
             this.connect()
                 .catch(() => (this.reconnectAttempts.onError++));
-          }, this.reconnectTimouts[this.reconnectAttempts.onError] * SECOND);
+          }, this.reconnectTimeouts[this.reconnectAttempts.onError] * SECOND);
         }
       };
       ws.onclose = () => {
@@ -77,7 +77,7 @@ export default class Swindon {
           setTimeout(() => {
             this.connect();
             this.reconnectAttempts.onClose++;
-          }, this.reconnectTimouts[this.reconnectAttempts.onClose] * SECOND);
+          }, this.reconnectTimeouts[this.reconnectAttempts.onClose] * SECOND);
         }
       };
 
@@ -102,7 +102,7 @@ export default class Swindon {
           kwargs,
         ]));
 
-        setTimeout(() => this.fullfillPromise(requestId, REJECT, {
+        setTimeout(() => this.fulfillPromise(requestId, REJECT, {
           requestMeta: {},
           data: {
               status: 'error',
@@ -147,7 +147,7 @@ export default class Swindon {
     }
 
     this.result && this.result(requestMeta, data);
-    this.fullfillPromise(requestMeta.request_id, RESOLVE, { requestMeta, data });
+    this.fulfillPromise(requestMeta.request_id, RESOLVE, { requestMeta, data });
   }
 
   doError(requestMeta, data) {
@@ -156,7 +156,7 @@ export default class Swindon {
     }
 
     this.error && this.error(requestMeta, data);
-    this.fullfillPromise(requestMeta.request_id, REJECT, { requestMeta, data });
+    this.fulfillPromise(requestMeta.request_id, REJECT, { requestMeta, data });
   }
 
   doHello(requestMeta, data) {
