@@ -21,18 +21,18 @@ Here is the example request to subscribe for simple pub-sub channel:
 
   componentDidMount() {
     this.guard = swindon
-        .open('notifications.subscribe', mytopic)
-        .subscribe('notifications.'+mytopic, message => {
+        .init('notifications.subscribe', [mytopic])
+        .listen('notifications.'+mytopic, message => {
            this.setState(message.n_notifications)
         })
-        .close('notifications.unsubscribe', mytopic)
+        .deinit('notifications.unsubscribe', [mytopic])
 
-    this.guard.on_open(response => {
-      this.setState({'nmessages': response.n_ntifications}))
+    this.guard.on_init(response => {
+      this.setState({'nmessages': response.n_notifications}))
     })
   }
   componentWillUnmount() {
-    this.guard.unsubscribe()
+    this.guard.close()
   }
 
 The ``notifications.subscribe`` will be called again on every reconnect, and
