@@ -1,3 +1,5 @@
+export { _Guard, _start_guard } from './guard'
+
 const RESOLVE = 0;
 const REJECT = 1;
 const RECONNECT_LIMIT = 3;
