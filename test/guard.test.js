@@ -1,6 +1,6 @@
 import assert from 'assert';
 import { connection } from './mock-swindon';
-import { _Guard, _start_guard } from './../lib/swindon';
+import { _Guard } from './../lib/swindon';
 
 describe('Basic guard', () => {
   it('init-listen-deinit', () => {
@@ -13,7 +13,8 @@ describe('Basic guard', () => {
       .deinit('notifications.unsubscribe', ['yyy.zzz'])
 
     let conn = connection()
-    _start_guard(guard, conn)
+    guard._subscribe(conn)
+    guard._call_inits(conn)
     assert(conn.call.calledWith('notifications.subscribe', ['yyy.zzz']))
     assert(conn.subscribe.calledWith('notifications.yyy.zzz'))
 

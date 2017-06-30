@@ -1,4 +1,4 @@
-export { _Guard, _start_guard } from './guard'
+export { _Guard } from './guard'
 export { _Connection } from './connection'
 
 const RESOLVE = 0;

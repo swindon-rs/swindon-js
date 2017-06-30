@@ -22,24 +22,25 @@ export class _Guard {
   close() {
     let conn = this._connection;
     this.connection = null
+    for(let cleanup of this._cleanup.splice(0, this._cleanup.length)) {
+      cleanup()
+    }
     if(conn) {
-      for(let cleanup of this._cleanup) {
-        cleanup()
-      }
       for(let call of this._backend_deinit) {
         conn.call(call.method_name, call.positional_args, call.keyword_args)
       }
     }
   }
-}
-
-export function _start_guard(guard, conn) {
-  guard._cleanup = []
-  for(let sub of guard._listeners) {
-    guard._cleanup.push(conn.subscribe(sub.topic, sub.callback))
+  _subscribe(conn) {
+    this._cleanup = []
+    for(let sub of this._listeners) {
+      this._cleanup.push(conn.subscribe(sub.topic, sub.callback))
+    }
   }
-  for(let call of guard._backend_init) {
-    conn.call(call.method_name, call.positional_args, call.keyword_args)
+  _call_inits(conn) {
+    this._connection = conn;
+    for(let call of this._backend_init) {
+      conn.call(call.method_name, call.positional_args, call.keyword_args)
+    }
   }
-  guard._connection = conn;
 }
