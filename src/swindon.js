@@ -7,81 +7,81 @@ const CONNECTION = '__conn__';
 
 export default class Swindon {
   constructor(url, handlers, options) {
-    this.url = url;
-    this.options = Object.assign({
+    this._url = url;
+    this._options = Object.assign({
       debug: false,
       serverTimeout: SERVER_TIMEOUT,
       reconnectOnClose: false,
       reconnectOnError: false
     }, options);
 
-    this.ws = null;
+    this._ws = null;
 
-    this.lastRequestId = 0;
-    this.reconnectAttempts ={
+    this._lastRequestId = 0;
+    this._reconnectAttempts ={
       onError: 0,
       onClose: 0,
     };
     // in seconds
-    this.reconnectTimeouts = [0, 2, 4];
-    this.requests = new Map();
+    this._reconnectTimeouts = [0, 2, 4];
+    this._requests = new Map();
 
     if (handlers) {
-      this.result = handlers.result;
-      this.error = handlers.error;
-      this.hello = handlers.hello;
-      this.message = handlers.message;
-      this.lattice = handlers.lattice;
+      this._result = handlers.result;
+      this._error = handlers.error;
+      this._hello = handlers.hello;
+      this._message = handlers.message;
+      this._lattice = handlers.lattice;
     }
   }
 
   isConnected() {
-    return !!(this.ws && this.ws.readyState === WebSocket.OPEN);
+    return !!(this._ws && this._ws.readyState === WebSocket.OPEN);
   }
 
-  fulfillPromise(key, resolution, payload) {
-    if (this.requests.has(key)) {
-      const fulfiller = this.requests.get(key)[resolution];
+  _fulfillPromise(key, resolution, payload) {
+    if (this._requests.has(key)) {
+      const fulfiller = this._requests.get(key)[resolution];
       fulfiller(payload);
-      this.requests.delete(key);
+      this._requests.delete(key);
     }
   }
 
   connect() {
     return new Promise((resolve, reject) => {
-      this.requests.set(CONNECTION, [resolve, reject]);
-      const url = this.url;
+      this._requests.set(CONNECTION, [resolve, reject]);
+      const url = this._url;
       const ws = new WebSocket(url);
       ws.onopen = () => {
-        this.fulfillPromise(CONNECTION, RESOLVE, null);
-        this.reconnectAttempts.onError = 0;
-        this.reconnectAttempts.onClose = 0;
+        this._fulfillPromise(CONNECTION, RESOLVE, null);
+        this._reconnectAttempts.onError = 0;
+        this._reconnectAttempts.onClose = 0;
       };
       ws.onmessage = (e) => {
         const json = JSON.parse(e.data);
-        this.parseMessage(json);
+        this._parseMessage(json);
       };
       ws.onerror = () => {
-        this.fulfillPromise(CONNECTION, REJECT, null);
-        if (this.options.reconnectOnError && (
-            this.reconnectAttempts.onError < RECONNECT_LIMIT)) {
+        this._fulfillPromise(CONNECTION, REJECT, null);
+        if (this._options.reconnectOnError && (
+            this._reconnectAttempts.onError < RECONNECT_LIMIT)) {
           setTimeout(() => {
             this.connect()
-                .catch(() => (this.reconnectAttempts.onError++));
-          }, this.reconnectTimeouts[this.reconnectAttempts.onError] * SECOND);
+                .catch(() => (this._reconnectAttempts.onError++));
+          }, this._reconnectTimeouts[this._reconnectAttempts.onError] * SECOND);
         }
       };
       ws.onclose = () => {
-        if (this.options.reconnectOnClose && (
-            this.reconnectAttempts.onClose < RECONNECT_LIMIT)) {
+        if (this._options.reconnectOnClose && (
+            this._reconnectAttempts.onClose < RECONNECT_LIMIT)) {
           setTimeout(() => {
-            this.connect();
-            this.reconnectAttempts.onClose++;
-          }, this.reconnectTimeouts[this.reconnectAttempts.onClose] * SECOND);
+            this._connect();
+            this._reconnectAttempts.onClose++;
+          }, this._reconnectTimeouts[this._reconnectAttempts.onClose] * SECOND);
         }
       };
 
-      this.ws = ws;
+      this._ws = ws;
     });
   }
 
@@ -89,10 +89,10 @@ export default class Swindon {
     let val;
     if (this.isConnected()) {
       val = new Promise((resolve, reject) => {
-        const requestId = this.lastRequestId;
+        const requestId = this._lastRequestId;
 
-        this.requests.set(requestId, [resolve, reject]);
-        this.ws.send(JSON.stringify([
+        this._requests.set(requestId, [resolve, reject]);
+        this._ws.send(JSON.stringify([
           method,
           {
               request_id: requestId,
@@ -102,15 +102,15 @@ export default class Swindon {
           kwargs,
         ]));
 
-        setTimeout(() => this.fulfillPromise(requestId, REJECT, {
+        setTimeout(() => this._fulfillPromise(requestId, REJECT, {
           requestMeta: {},
           data: {
               status: 'error',
               message: 'Timeout from server',
           },
-        }), this.options.serverTimeout);
+        }), this._options.serverTimeout);
 
-        this.lastRequestId += 1;
+        this._lastRequestId += 1;
       });
     } else {
       console.error('Ooops! Swindon is not connected ;(');
@@ -120,70 +120,70 @@ export default class Swindon {
     return val;
   }
 
-  parseMessage(response) {
+  _parseMessage(response) {
     const eventType = response[0];
     const requestMeta = response[1];
     const data = response[2];
 
     switch (eventType) {
       case 'result':
-        return this.doResult(requestMeta, data);
+        return this._doResult(requestMeta, data);
       case 'error':
-        return this.doError(requestMeta, data);
+        return this._doError(requestMeta, data);
       case 'hello':
-        return this.doHello(requestMeta, data);
+        return this._doHello(requestMeta, data);
       case 'message':
-        return this.doMessage(requestMeta, data);
+        return this._doMessage(requestMeta, data);
       case 'lattice':
-        return this.doLattice(requestMeta, data);
+        return this._doLattice(requestMeta, data);
       default:
-        return this.doUnknownCommand(eventType, requestMeta, data);
+        return this._doUnknownCommand(eventType, requestMeta, data);
     }
   }
 
-  doResult(requestMeta, data) {
-    if (this.options.debug) {
+  _doResult(requestMeta, data) {
+    if (this._options.debug) {
       console.log('result', requestMeta, data);
     }
 
-    this.result && this.result(requestMeta, data);
-    this.fulfillPromise(requestMeta.request_id, RESOLVE, { requestMeta, data });
+    this._result && this._result(requestMeta, data);
+    this._fulfillPromise(requestMeta.request_id, RESOLVE, { requestMeta, data });
   }
 
-  doError(requestMeta, data) {
-    if (this.options.debug) {
+  _doError(requestMeta, data) {
+    if (this._options.debug) {
       console.error('error', requestMeta, data);
     }
 
-    this.error && this.error(requestMeta, data);
-    this.fulfillPromise(requestMeta.request_id, REJECT, { requestMeta, data });
+    this._error && this._error(requestMeta, data);
+    this._fulfillPromise(requestMeta.request_id, REJECT, { requestMeta, data });
   }
 
-  doHello(requestMeta, data) {
-    if (this.options.debug) {
+  _doHello(requestMeta, data) {
+    if (this._options.debug) {
       console.log('hello', requestMeta, data);
     }
 
-    this.hello && this.hello(requestMeta, data);
+    this._hello && this._hello(requestMeta, data);
   }
 
-  doMessage(requestMeta, data) {
-    if (this.options.debug) {
+  _doMessage(requestMeta, data) {
+    if (this._options.debug) {
       console.log('message', requestMeta, data);
     }
 
-    this.message && this.message(requestMeta, data);
+    this._message && this._message(requestMeta, data);
   }
 
-  doLattice(requestMeta, data) {
-    if (this.options.debug) {
+  _doLattice(requestMeta, data) {
+    if (this._options.debug) {
       console.log('lattice', requestMeta, data);
     }
 
-    this.lattice && this.lattice(requestMeta, data);
+    this._lattice && this._lattice(requestMeta, data);
   }
 
-  doUnknownCommand(eventType, requestMeta, data) {
+  _doUnknownCommand(eventType, requestMeta, data) {
     console.error('Unknown command, check SwindonJS version', eventType, requestMeta, data);
   }
 }
