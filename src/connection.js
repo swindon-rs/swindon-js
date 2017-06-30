@@ -81,14 +81,15 @@ export class _Connection {
   call(method_name, positional_args, keyword_args) {
     this._lastRequestId += 1
     const rid = this._lastRequestId
-    const meta = {request_id: rid, ...keyword_args}
+    const meta = {request_id: rid}
     const promise = new Promise((accept, reject) => {
       this._requests[rid] = {
         accept: accept,
         reject: reject,
       }
     })
-    this._ws.send(JSON.stringify(method_name, meta, positional_args))
+    this._ws.send(JSON.stringify([method_name, meta,
+                                  positional_args, keyword_args]))
     return promise;
   }
 
