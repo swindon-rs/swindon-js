@@ -1,10 +1,11 @@
 export class _Guard {
-  constructor() {
+  constructor(swindon) {
     this._backend_init = []
     this._backend_deinit = []
     this._listeners = []
     this._cleanup = []
     this.close = this.close.bind(this);
+    this._swindon = swindon
     this._connection = null
   }
   init(method_name, positional_args, keyword_args) {
@@ -31,14 +32,15 @@ export class _Guard {
       }
     }
   }
-  _subscribe(conn) {
+  _subscribe() {
     this._cleanup = []
     for(let sub of this._listeners) {
-      this._cleanup.push(conn.subscribe(sub.topic, sub.callback))
+      this._cleanup.push(this._swindon._connection
+                         .subscribe(sub.topic, sub.callback))
     }
   }
-  _call_inits(conn) {
-    this._connection = conn;
+  _call_inits() {
+    const conn = this._connection = this._swindon._connection
     for(let call of this._backend_init) {
       conn.call(call.method_name, call.positional_args, call.keyword_args)
     }

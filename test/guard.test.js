@@ -5,16 +5,16 @@ import { _Guard } from './../lib/swindon';
 describe('Basic guard', () => {
   it('init-listen-deinit', () => {
 
-    let guard = new _Guard()
+    let conn = connection()
+    let guard = new _Guard({_connection: conn})
       .init('notifications.subscribe', ['yyy.zzz'])
       .listen('notifications.yyy.zzz', message => {
          this.setState(message.n_notifications)
       })
       .deinit('notifications.unsubscribe', ['yyy.zzz'])
 
-    let conn = connection()
-    guard._subscribe(conn)
-    guard._call_inits(conn)
+    guard._subscribe()
+    guard._call_inits()
     assert(conn.call.calledWith('notifications.subscribe', ['yyy.zzz']))
     assert(conn.subscribe.calledWith('notifications.yyy.zzz'))
 
