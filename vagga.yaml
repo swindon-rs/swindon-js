@@ -3,13 +3,13 @@ containers:
     environ:
       NODE_PATH: /usr/lib/node_modules
     setup:
-    - !UbuntuRelease { codename: trusty }
-    - !Install [ca-certificates, build-essential, gyp]
+    - !Ubuntu xenial
+    - !Install [ca-certificates, build-essential]
     - !AptTrust
       keys: [1655A0AB68576280]
     - !UbuntuRepo
       url: https://deb.nodesource.com/node_6.x
-      suite: trusty
+      suite: xenial
       components: [main]
     - !Install [nodejs]
     - !NpmConfig
