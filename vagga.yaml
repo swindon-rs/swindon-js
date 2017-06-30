@@ -1,4 +1,5 @@
 containers:
+
   base:
     environ:
       NODE_PATH: /usr/lib/node_modules
@@ -18,6 +19,14 @@ containers:
       package: true
       dev: true
       optional: true
+
+  doc:
+    setup:
+    - !Alpine v3.6
+    - !Install [alpine-base, py-sphinx, make]
+    # If you require additional packages to build docs uncomment this
+    # - !Py3Requirements doc/requirements.txt
+
 commands:
   build: !Command
     description: Build for node
@@ -35,3 +44,12 @@ commands:
       NODE_ENV: test
     run: |
       mocha --compilers js:babel-register --timeout 15000
+
+  doc: !Command
+    description: Build documentation
+    container: doc
+    run: [make, html]
+    work-dir: doc
+    epilog: |
+      --------------------------------------------------------
+      Documentation is built under doc/_build/html/index.html
