@@ -18,7 +18,7 @@ describe('Basic guard', () => {
     assert(conn.subscribe.calledWith('notifications.yyy.zzz'))
 
     guard.close()
-    assert(conn.unsubscribe.calledWith('notifications.yyy.zzz'))
+    assert(conn._mock_unsubscribe.calledWith())
     assert(conn.call.calledWith('notifications.unsubscribe', ['yyy.zzz']))
 
   });

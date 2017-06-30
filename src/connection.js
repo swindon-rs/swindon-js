@@ -1,0 +1,113 @@
+export class _Connection {
+  constructor(websock) {
+    this._listeners = {}
+    this._hello = new Promise((accept, reject) => {
+      this._hello_accept = accept;
+      this._hello_reject = reject;
+    })
+    this._requests = {}
+    this._lastRequestId = 0;
+
+    // We don't do anything on onopen, because we wait for
+    // hello message instead
+    websock.onmessage = (e) => {
+      const json = JSON.parse(e.data);
+      this._dispatch(json);
+    };
+
+    this._ws = websock;
+  }
+  _dispatch(input) {
+    const eventType = input[0]
+    const meta = input[1]
+    const data = input[2]
+
+    switch (eventType) {
+
+      case 'result':
+        const promise = this._requests[meta.request_id]
+        delete this._requests[meta.request_id]
+        if(promise) {
+          promise.accept(data, meta)
+        } else {
+          console.error('Unsolicited reply', meta.request_id)
+        }
+        return
+
+      case 'error':
+        // TODO(tailhook) wrap it into some error object
+        if(promise) {
+          promise.reject(data, meta)
+        } else {
+          console.error('Unsolicited error reply', meta.request_id)
+        }
+        return
+
+      case 'hello':
+        // metadata is second param, so you can
+        // ignore it most of the time
+        this._hello_accept(data, meta)
+        return
+
+      case 'message':
+        const handlers = this._listeners[meta.topic]
+        if(handlers) {
+          for(var handler of handlers) {
+            try {
+              // metadata is second param, so you can
+              // ignore it most of the time
+              handler(data, meta)
+            } catch(e) {
+              // TODO(tailhook)
+              console.error("Error processing message", meta, data)
+            }
+          }
+        } else {
+          console.info('Unsolicited message', meta)
+        }
+        return
+
+      case 'lattice':
+        console.error('Lattices are not implemented yet')
+        return
+
+      default:
+        console.error('Unknown command, check SwindonJS version',
+          eventType, requestMeta, data)
+        return
+    }
+  }
+
+  call(method_name, positional_args, keyword_args) {
+    this._lastRequestId += 1
+    const rid = this._lastRequestId
+    const meta = {request_id: rid, ...keyword_args}
+    const promise = new Promise((accept, reject) => {
+      this._requests[rid] = {
+        accept: accept,
+        reject: reject,
+      }
+    })
+    this._ws.send(JSON.stringify(method_name, meta, positional_args))
+    return promise;
+  }
+
+  subscribe(topic, callback) {
+    const l = this._listeners[topic] || []
+    l.push(callback)
+    this._listeners[topic] = l
+    return () => {
+      const idx = l.indexOf(callback)
+      if(idx >= 0) {
+        l.splice(l.indexOf(callback), 1, 0)
+        if(l.length == 0) {
+          delete this._listeners[topic]
+        }
+      }
+    }
+  }
+
+  wait_connected() {
+    return this._hello
+  }
+}

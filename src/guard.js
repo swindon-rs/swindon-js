@@ -3,6 +3,7 @@ export class _Guard {
     this._backend_init = []
     this._backend_deinit = []
     this._listeners = []
+    this._cleanup = []
     this.close = this.close.bind(this);
     this._connection = null
   }
@@ -22,8 +23,8 @@ export class _Guard {
     let conn = this._connection;
     this.connection = null
     if(conn) {
-      for(let sub of this._listeners) {
-        conn.unsubscribe(sub.topic, sub.callback)
+      for(let cleanup of this._cleanup) {
+        cleanup()
       }
       for(let call of this._backend_deinit) {
         conn.call(call.method_name, call.positional_args, call.keyword_args)
@@ -33,8 +34,9 @@ export class _Guard {
 }
 
 export function _start_guard(guard, conn) {
+  guard._cleanup = []
   for(let sub of guard._listeners) {
-    conn.subscribe(sub.topic, sub.callback)
+    guard._cleanup.push(conn.subscribe(sub.topic, sub.callback))
   }
   for(let call of guard._backend_init) {
     conn.call(call.method_name, call.positional_args, call.keyword_args)
