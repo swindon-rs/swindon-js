@@ -13,7 +13,6 @@ export default class Swindon {
     this._options = {...options}
     this._connection = null
     this._guards = []
-    this._start()
     this._status = 'starting'
     this._started = 0
     this._reconnect_timeout = null
@@ -44,20 +43,21 @@ export default class Swindon {
       this._status = 'connecting'
     }
     ws.onerror = ev => {
-      console.error("Swindon websocket error", ev)
+      console.error("Swindon: Websocket error")
     }
     ws.onclose = ev => {
-      console.log("Swindon websocket closed", ev.code, ev.reason)
-      this._status = 'wait'
+      console.log("Swindon: Websocket closed", ev.code, ev.reason)
       this._schedule_reconnect()
     }
     this._connection = new _Connection(ws)
+
+    for(let guard of this._guards) {
+      guard._subscribe()
+    }
+
     this._connection.wait_connected().then(({data, metadata}) => {
       this._status = 'active'
       this._wait_connected_accept(data)
-      for(var guard of this._guards) {
-        guard._subscribe()
-      }
       for(var guard of this._guards) {
         guard._call_inits()
       }
@@ -72,6 +72,10 @@ export default class Swindon {
   }
 
   _schedule_reconnect() {
+    if(this._status == 'closed') {
+      return
+    }
+    this._status = 'wait'
     this._reset_promise()
     this._clear_reconnect()
 
@@ -103,11 +107,13 @@ export default class Swindon {
   }
 
   close() {
+    this._status = 'closed'
     const conn = this._connection
     this._connection = null
     if(conn) {
       conn.close()
     }
+    this._clear_reconnect()
   }
 
   _remove_guard(guard) {

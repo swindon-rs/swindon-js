@@ -8,16 +8,23 @@ export class _Guard {
     this._swindon = swindon
     this._connection = null
   }
-  init(method_name, positional_args, keyword_args) {
+  init(method_name, positional_args=[], keyword_args={}) {
     this._backend_init.push({ method_name, positional_args, keyword_args });
+    if(this._swindon._status == 'active') {
+      this._swindon._connection
+        .call(method_name, positional_args, keyword_args)
+    }
     return this;
   }
-  deinit(method_name, positional_args, keyword_args) {
+  deinit(method_name, positional_args=[], keyword_args={}) {
     this._backend_deinit.push({ method_name, positional_args, keyword_args });
     return this;
   }
   listen(topic, callback) {
     this._listeners.push({ topic, callback })
+    if(this._swindon._connection) {
+      this._cleanup.push(this._swindon._connection.subscribe(topic, callback))
+    }
     return this;
   }
   close() {

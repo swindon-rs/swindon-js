@@ -8,7 +8,7 @@ describe('Basic guard', () => {
   it('init-listen-deinit', () => {
 
     let conn = connection()
-    let swindon = {_connection: conn, _remove_guard: sinon.spy()}
+    let swindon = {_connection: conn, _remove_guard: sinon.spy() }
     let guard = new _Guard(swindon)
       .init('notifications.subscribe', ['yyy.zzz'])
       .listen('notifications.yyy.zzz', message => {
