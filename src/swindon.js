@@ -10,7 +10,10 @@ const TIMEOUTS = [1000, 2000, 10000, 30000, 60000, 300000]  // 5 minutes max
 export default class Swindon {
   constructor(url, options) {
     this._url = url
-    this._options = {...options}
+    this._options = {
+      on_state_change: null,
+      ...options,
+    }
     this._connection = null
     this._guards = []
     this._status = 'starting'
@@ -33,14 +36,26 @@ export default class Swindon {
     this._init_connection()
   }
 
+  _new_state(status, reconnect_time) {
+    this._reconnect_time = reconnect_time
+    this._status = status
+    const fun = this._options.on_state_change;
+    try {
+      if(fun) {
+        this._options.on_state_change(this.state())
+      }
+    } catch(e) {
+      console.error("Swindon: Error processing state", status, e)
+    }
+  }
+
   _init_connection() {
     this._clear_reconnect()
     this._started = Date.now()
-    this._status = 'connecting'
-    this._reconnect_time = null
+    this._new_state('connecting', null)
     const ws = new WebSocket(this._url)
     ws.onopen = ev => {
-      this._status = 'connecting'
+      this._new_state('connecting', null)
     }
     ws.onerror = ev => {
       console.error("Swindon: Websocket error")
@@ -56,7 +71,7 @@ export default class Swindon {
     }
 
     this._connection.wait_connected().then(({data, metadata}) => {
-      this._status = 'active'
+      this._new_state('active', null)
       this._wait_connected_accept(data)
       for(var guard of this._guards) {
         guard._call_inits()
@@ -75,7 +90,6 @@ export default class Swindon {
     if(this._status == 'closed') {
       return
     }
-    this._status = 'wait'
     this._reset_promise()
     this._clear_reconnect()
 
@@ -89,7 +103,7 @@ export default class Swindon {
       this._reconnect_index = 0
     }
 
-    this._reconnect_time = Date.now() + timeo
+    this._new_state('wait', Date.now() + timeo)
     this._reconnect_timeout = setTimeout(_ => this._reconnect(), timeo)
   }
   _reconnect() {
@@ -107,7 +121,7 @@ export default class Swindon {
   }
 
   close() {
-    this._status = 'closed'
+    this._new_state('closed', null)
     const conn = this._connection
     this._connection = null
     if(conn) {
