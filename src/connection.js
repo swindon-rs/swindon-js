@@ -24,29 +24,35 @@ export class _Connection {
 
     switch (eventType) {
 
-      case 'result':
+      case 'result': {
         const promise = this._requests[meta.request_id]
         delete this._requests[meta.request_id]
         if(promise) {
-          promise.accept(data, meta)
+          promise.accept(data)
         } else {
-          console.error('Unsolicited reply', meta.request_id)
+          console.error('Swindon: Unsolicited reply',
+            meta.request_id, data)
         }
         return
+      }
 
-      case 'error':
+      case 'error': {
+        const promise = this._requests[meta.request_id]
+        delete this._requests[meta.request_id]
         // TODO(tailhook) wrap it into some error object
         if(promise) {
-          promise.reject(data, meta)
+          promise.reject(data)
         } else {
-          console.error('Unsolicited error reply', meta.request_id)
+          console.error('Swindon: Unsolicited error reply',
+            meta.request_id, data)
         }
         return
+      }
 
       case 'hello':
         // metadata is second param, so you can
         // ignore it most of the time
-        this._hello_accept(data, meta)
+        this._hello_accept({ data, meta })
         return
 
       case 'message':
@@ -59,11 +65,11 @@ export class _Connection {
               handler(data, meta)
             } catch(e) {
               // TODO(tailhook)
-              console.error("Error processing message", meta, data)
+              console.error("Swindon: Error processing message", meta, data)
             }
           }
         } else {
-          console.info('Unsolicited message', meta)
+          console.info('Swindon: Unsolicited message', meta)
         }
         return
 
@@ -110,5 +116,9 @@ export class _Connection {
 
   wait_connected() {
     return this._hello
+  }
+
+  close() {
+    this._ws.close()
   }
 }
