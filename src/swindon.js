@@ -1,189 +1,153 @@
-const RESOLVE = 0;
-const REJECT = 1;
-const RECONNECT_LIMIT = 3;
-const SECOND = 1000;
-const SERVER_TIMEOUT = 10 * SECOND;
-const CONNECTION = '__conn__';
+import { _Guard } from './guard'
+export { _Guard } from './guard'
+import { _Connection } from './connection'
+export { _Connection } from './connection'
+
+const OK_DURATION = 10000
+const OK_TIMEOUT = 100     // 100 ms, when connection is fine
+const TIMEOUTS = [1000, 2000, 10000, 30000, 60000, 300000]  // 5 minutes max
 
 export default class Swindon {
-  constructor(url, handlers, options) {
-    this._url = url;
-    this._options = Object.assign({
-      debug: false,
-      serverTimeout: SERVER_TIMEOUT,
-      reconnectOnClose: false,
-      reconnectOnError: false
-    }, options);
+  constructor(url, options) {
+    this._url = url
+    this._options = {
+      onStateChange: null,
+      ...options,
+    }
+    this._connection = null
+    this._guards = []
+    this._status = 'starting'
+    this._started = 0
+    this._reconnectTimeout = null
+    this._reconnectIndex = 0
+    this._reconnectTime = null
+    this._start()
+  }
 
-    this._ws = null;
+  _resetPromise() {
+    this._waitConnected = new Promise((accept, reject) => {
+      this._waitConnectedAccept = accept;
+      this._waitConnectedReject = reject;
+    })
+  }
 
-    this._lastRequestId = 0;
-    this._reconnectAttempts ={
-      onError: 0,
-      onClose: 0,
-    };
-    // in seconds
-    this._reconnectTimeouts = [0, 2, 4];
-    this._requests = new Map();
+  _start() {
+    this._resetPromise()
+    this._initConnection()
+  }
 
-    if (handlers) {
-      this._result = handlers.result;
-      this._error = handlers.error;
-      this._hello = handlers.hello;
-      this._message = handlers.message;
-      this._lattice = handlers.lattice;
+  _newState(status, reconnect_time) {
+    this._reconnectTime = reconnect_time
+    this._status = status
+    const fun = this._options.onStateChange;
+    try {
+      if(fun) {
+        this._options.onStateChange(this.state())
+      }
+    } catch(e) {
+      console.error("Swindon: Error processing state", status, e)
     }
   }
 
-  isConnected() {
-    return !!(this._ws && this._ws.readyState === WebSocket.OPEN);
+  _initConnection() {
+    this._clearReconnect()
+    this._started = Date.now()
+    this._newState('connecting', null)
+    const ws = new WebSocket(this._url)
+    ws.onopen = ev => {
+      this._newState('connecting', null)
+    }
+    ws.onerror = ev => {
+      console.error("Swindon: Websocket error")
+    }
+    ws.onclose = ev => {
+      console.log("Swindon: Websocket closed", ev.code, ev.reason)
+      this._scheduleReconnect()
+    }
+    this._connection = new _Connection(ws)
+
+    for(let guard of this._guards) {
+      guard._subscribe()
+    }
+
+    this._connection.waitConnected().then(({data, metadata}) => {
+      this._newState('active', null)
+      this._waitConnectedAccept(data)
+      for(var guard of this._guards) {
+        guard._callInits()
+      }
+    })
   }
 
-  _fulfillPromise(key, resolution, payload) {
-    if (this._requests.has(key)) {
-      const fulfiller = this._requests.get(key)[resolution];
-      fulfiller(payload);
-      this._requests.delete(key);
+  _clearReconnect() {
+    if(this._reconnectTimeout) {
+      clearTimeout(this._reconnectTimeout)
+      this._reconnectTimeout = null
     }
   }
 
-  connect() {
-    return new Promise((resolve, reject) => {
-      this._requests.set(CONNECTION, [resolve, reject]);
-      const url = this._url;
-      const ws = new WebSocket(url);
-      ws.onopen = () => {
-        this._fulfillPromise(CONNECTION, RESOLVE, null);
-        this._reconnectAttempts.onError = 0;
-        this._reconnectAttempts.onClose = 0;
-      };
-      ws.onmessage = (e) => {
-        const json = JSON.parse(e.data);
-        this._parseMessage(json);
-      };
-      ws.onerror = () => {
-        this._fulfillPromise(CONNECTION, REJECT, null);
-        if (this._options.reconnectOnError && (
-            this._reconnectAttempts.onError < RECONNECT_LIMIT)) {
-          setTimeout(() => {
-            this.connect()
-                .catch(() => (this._reconnectAttempts.onError++));
-          }, this._reconnectTimeouts[this._reconnectAttempts.onError] * SECOND);
-        }
-      };
-      ws.onclose = () => {
-        if (this._options.reconnectOnClose && (
-            this._reconnectAttempts.onClose < RECONNECT_LIMIT)) {
-          setTimeout(() => {
-            this._connect();
-            this._reconnectAttempts.onClose++;
-          }, this._reconnectTimeouts[this._reconnectAttempts.onClose] * SECOND);
-        }
-      };
+  _scheduleReconnect() {
+    if(this._status == 'closed') {
+      return
+    }
+    this._resetPromise()
+    this._clearReconnect()
 
-      this._ws = ws;
-    });
-  }
-
-  call(method, args, kwargs) {
-    let val;
-    if (this.isConnected()) {
-      val = new Promise((resolve, reject) => {
-        const requestId = this._lastRequestId;
-
-        this._requests.set(requestId, [resolve, reject]);
-        this._ws.send(JSON.stringify([
-          method,
-          {
-              request_id: requestId,
-              activity: 120, // 2 minutes for activity
-          },
-          args,
-          kwargs,
-        ]));
-
-        setTimeout(() => this._fulfillPromise(requestId, REJECT, {
-          requestMeta: {},
-          data: {
-              status: 'error',
-              message: 'Timeout from server',
-          },
-        }), this._options.serverTimeout);
-
-        this._lastRequestId += 1;
-      });
+    let timeo = OK_TIMEOUT
+    if(new Date() - this._started >= OK_DURATION) {
+      timeo = TIMEOUTS[this._reconnectIndex];
+      this._reconnectIndex = Math.min(this._reconnectIndex+1,
+                                       TIMEOUTS.length - 1);
     } else {
-      console.error('Ooops! Swindon is not connected ;(');
-      val = new Promise((_, reject) => reject());
+      timeo = OK_TIMEOUT
+      this._reconnectIndex = 0
     }
 
-    return val;
+    this._newState('wait', Date.now() + timeo)
+    this._reconnectTimeout = setTimeout(_ => this._reconnect(), timeo)
+  }
+  _reconnect() {
+    this._initConnection()
   }
 
-  _parseMessage(response) {
-    const eventType = response[0];
-    const requestMeta = response[1];
-    const data = response[2];
+  waitConnected() {
+    return this._waitConnected;
+  }
 
-    switch (eventType) {
-      case 'result':
-        return this._doResult(requestMeta, data);
-      case 'error':
-        return this._doError(requestMeta, data);
-      case 'hello':
-        return this._doHello(requestMeta, data);
-      case 'message':
-        return this._doMessage(requestMeta, data);
-      case 'lattice':
-        return this._doLattice(requestMeta, data);
-      default:
-        return this._doUnknownCommand(eventType, requestMeta, data);
+  guard() {
+    const guard = new _Guard(this)
+    this._guards.push(guard)
+    return guard
+  }
+
+  close() {
+    this._newState('closed', null)
+    const conn = this._connection
+    this._connection = null
+    if(conn) {
+      conn.close()
+    }
+    this._clearReconnect()
+  }
+
+  _removeGuard(guard) {
+    const idx = this._guards.indexOf(guard)
+    if(idx >= 0) {
+      this._guards.splice(idx, 0)
     }
   }
 
-  _doResult(requestMeta, data) {
-    if (this._options.debug) {
-      console.log('result', requestMeta, data);
+  state() {
+    return {
+      status: this._status,
+      reconnect_time: this._reconnectTime,
+      guards: this._guards.length,
     }
-
-    this._result && this._result(requestMeta, data);
-    this._fulfillPromise(requestMeta.request_id, RESOLVE, { requestMeta, data });
   }
 
-  _doError(requestMeta, data) {
-    if (this._options.debug) {
-      console.error('error', requestMeta, data);
-    }
-
-    this._error && this._error(requestMeta, data);
-    this._fulfillPromise(requestMeta.request_id, REJECT, { requestMeta, data });
-  }
-
-  _doHello(requestMeta, data) {
-    if (this._options.debug) {
-      console.log('hello', requestMeta, data);
-    }
-
-    this._hello && this._hello(requestMeta, data);
-  }
-
-  _doMessage(requestMeta, data) {
-    if (this._options.debug) {
-      console.log('message', requestMeta, data);
-    }
-
-    this._message && this._message(requestMeta, data);
-  }
-
-  _doLattice(requestMeta, data) {
-    if (this._options.debug) {
-      console.log('lattice', requestMeta, data);
-    }
-
-    this._lattice && this._lattice(requestMeta, data);
-  }
-
-  _doUnknownCommand(eventType, requestMeta, data) {
-    console.error('Unknown command, check SwindonJS version', eventType, requestMeta, data);
+  call(method_name, positional_args=[], named_args={}) {
+    return this._waitConnected.then(_ => {
+      return this._connection.call(method_name, positional_args, named_args)
+    })
   }
 }
