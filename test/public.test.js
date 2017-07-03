@@ -43,7 +43,7 @@ describe('Swindon connection action', () => {
       let swindon = new Swindon('/2')
       try {
         assert.equal(swindon.state().status, 'connecting')
-        let user_info = await swindon.wait_connected()
+        let user_info = await swindon.waitConnected()
         assert.equal(swindon.state().status, 'active',
           'establish ws client-server connection')
         assert.equal(user_info.user_id, 7)
@@ -125,7 +125,7 @@ describe('Swindon Public actions', () => {
             srv.sendj("message", {"topic": "kittens"}, "meaw")
           }))
           var swindon = new Swindon('/6')
-          await swindon.wait_connected()
+          await swindon.waitConnected()
 
           let guard
           let wait_msg = new Promise(accept => {

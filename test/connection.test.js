@@ -18,7 +18,7 @@ describe('Connection', () => {
 
       let wsock = new WebSocket('/ws')
       let conn = new _Connection(wsock)
-      await conn.wait_connected()
+      await conn.waitConnected()
       let result = await conn.call("test", [], {})
       assert.equal(result, "ok")
     } finally {
@@ -40,7 +40,7 @@ describe('Connection', () => {
         assert(value == 'yyy')
         done()
       })
-      await conn.wait_connected()
+      await conn.waitConnected()
     } finally {
       serv.close()
     }

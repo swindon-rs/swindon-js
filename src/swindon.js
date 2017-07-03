@@ -11,58 +11,58 @@ export default class Swindon {
   constructor(url, options) {
     this._url = url
     this._options = {
-      on_state_change: null,
+      onStateChange: null,
       ...options,
     }
     this._connection = null
     this._guards = []
     this._status = 'starting'
     this._started = 0
-    this._reconnect_timeout = null
-    this._reconnect_index = 0
-    this._reconnect_time = null
+    this._reconnectTimeout = null
+    this._reconnectIndex = 0
+    this._reconnectTime = null
     this._start()
   }
 
-  _reset_promise() {
-    this._wait_connected = new Promise((accept, reject) => {
-      this._wait_connected_accept = accept;
-      this._wait_connected_reject = reject;
+  _resetPromise() {
+    this._waitConnected = new Promise((accept, reject) => {
+      this._waitConnectedAccept = accept;
+      this._waitConnectedReject = reject;
     })
   }
 
   _start() {
-    this._reset_promise()
-    this._init_connection()
+    this._resetPromise()
+    this._initConnection()
   }
 
-  _new_state(status, reconnect_time) {
-    this._reconnect_time = reconnect_time
+  _newState(status, reconnect_time) {
+    this._reconnectTime = reconnect_time
     this._status = status
-    const fun = this._options.on_state_change;
+    const fun = this._options.onStateChange;
     try {
       if(fun) {
-        this._options.on_state_change(this.state())
+        this._options.onStateChange(this.state())
       }
     } catch(e) {
       console.error("Swindon: Error processing state", status, e)
     }
   }
 
-  _init_connection() {
-    this._clear_reconnect()
+  _initConnection() {
+    this._clearReconnect()
     this._started = Date.now()
-    this._new_state('connecting', null)
+    this._newState('connecting', null)
     const ws = new WebSocket(this._url)
     ws.onopen = ev => {
-      this._new_state('connecting', null)
+      this._newState('connecting', null)
     }
     ws.onerror = ev => {
       console.error("Swindon: Websocket error")
     }
     ws.onclose = ev => {
       console.log("Swindon: Websocket closed", ev.code, ev.reason)
-      this._schedule_reconnect()
+      this._scheduleReconnect()
     }
     this._connection = new _Connection(ws)
 
@@ -70,48 +70,48 @@ export default class Swindon {
       guard._subscribe()
     }
 
-    this._connection.wait_connected().then(({data, metadata}) => {
-      this._new_state('active', null)
-      this._wait_connected_accept(data)
+    this._connection.waitConnected().then(({data, metadata}) => {
+      this._newState('active', null)
+      this._waitConnectedAccept(data)
       for(var guard of this._guards) {
-        guard._call_inits()
+        guard._callInits()
       }
     })
   }
 
-  _clear_reconnect() {
-    if(this._reconnect_timeout) {
-      clearTimeout(this._reconnect_timeout)
-      this._reconnect_timeout = null
+  _clearReconnect() {
+    if(this._reconnectTimeout) {
+      clearTimeout(this._reconnectTimeout)
+      this._reconnectTimeout = null
     }
   }
 
-  _schedule_reconnect() {
+  _scheduleReconnect() {
     if(this._status == 'closed') {
       return
     }
-    this._reset_promise()
-    this._clear_reconnect()
+    this._resetPromise()
+    this._clearReconnect()
 
     let timeo = OK_TIMEOUT
     if(new Date() - this._started >= OK_DURATION) {
-      timeo = TIMEOUTS[this._reconnect_index];
-      this._reconnect_index = Math.min(this._reconnect_index+1,
+      timeo = TIMEOUTS[this._reconnectIndex];
+      this._reconnectIndex = Math.min(this._reconnectIndex+1,
                                        TIMEOUTS.length - 1);
     } else {
       timeo = OK_TIMEOUT
-      this._reconnect_index = 0
+      this._reconnectIndex = 0
     }
 
-    this._new_state('wait', Date.now() + timeo)
-    this._reconnect_timeout = setTimeout(_ => this._reconnect(), timeo)
+    this._newState('wait', Date.now() + timeo)
+    this._reconnectTimeout = setTimeout(_ => this._reconnect(), timeo)
   }
   _reconnect() {
-    this._init_connection()
+    this._initConnection()
   }
 
-  wait_connected() {
-    return this._wait_connected;
+  waitConnected() {
+    return this._waitConnected;
   }
 
   guard() {
@@ -121,16 +121,16 @@ export default class Swindon {
   }
 
   close() {
-    this._new_state('closed', null)
+    this._newState('closed', null)
     const conn = this._connection
     this._connection = null
     if(conn) {
       conn.close()
     }
-    this._clear_reconnect()
+    this._clearReconnect()
   }
 
-  _remove_guard(guard) {
+  _removeGuard(guard) {
     const idx = this._guards.indexOf(guard)
     if(idx >= 0) {
       this._guards.splice(idx, 0)
@@ -140,13 +140,13 @@ export default class Swindon {
   state() {
     return {
       status: this._status,
-      reconnect_time: this._reconnect_time,
+      reconnect_time: this._reconnectTime,
       guards: this._guards.length,
     }
   }
 
   call(method_name, positional_args=[], named_args={}) {
-    return this._wait_connected.then(_ => {
+    return this._waitConnected.then(_ => {
       return this._connection.call(method_name, positional_args, named_args)
     })
   }

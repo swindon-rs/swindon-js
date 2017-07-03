@@ -1,7 +1,7 @@
 export class _Guard {
   constructor(swindon) {
-    this._backend_init = []
-    this._backend_deinit = []
+    this._backendInit = []
+    this._backendDeinit = []
     this._listeners = []
     this._cleanup = []
     this.close = this.close.bind(this);
@@ -9,7 +9,7 @@ export class _Guard {
     this._connection = null
   }
   init(method_name, positional_args=[], keyword_args={}) {
-    this._backend_init.push({ method_name, positional_args, keyword_args });
+    this._backendInit.push({ method_name, positional_args, keyword_args });
     if(this._swindon._status == 'active') {
       this._swindon._connection
         .call(method_name, positional_args, keyword_args)
@@ -17,7 +17,7 @@ export class _Guard {
     return this;
   }
   deinit(method_name, positional_args=[], keyword_args={}) {
-    this._backend_deinit.push({ method_name, positional_args, keyword_args });
+    this._backendDeinit.push({ method_name, positional_args, keyword_args });
     return this;
   }
   listen(topic, callback) {
@@ -35,12 +35,12 @@ export class _Guard {
       cleanup()
     }
     if(conn) {
-      for(let call of this._backend_deinit) {
+      for(let call of this._backendDeinit) {
         conn.call(call.method_name, call.positional_args, call.keyword_args)
       }
     }
     if(swindon) {
-      swindon._remove_guard(this)
+      swindon._removeGuard(this)
       this._swindon = null
     }
   }
@@ -51,9 +51,9 @@ export class _Guard {
                          .subscribe(sub.topic, sub.callback))
     }
   }
-  _call_inits() {
+  _callInits() {
     const conn = this._connection = this._swindon._connection
-    for(let call of this._backend_init) {
+    for(let call of this._backendInit) {
       conn.call(call.method_name, call.positional_args, call.keyword_args)
     }
   }

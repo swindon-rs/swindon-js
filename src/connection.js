@@ -2,8 +2,8 @@ export class _Connection {
   constructor(websock) {
     this._listeners = {}
     this._hello = new Promise((accept, reject) => {
-      this._hello_accept = accept;
-      this._hello_reject = reject;
+      this._helloAccept = accept;
+      this._helloReject = reject;
     })
     this._requests = {}
     this._lastRequestId = 0;
@@ -52,7 +52,7 @@ export class _Connection {
       case 'hello':
         // metadata is second param, so you can
         // ignore it most of the time
-        this._hello_accept({ data, meta })
+        this._helloAccept({ data, meta })
         return
 
       case 'message':
@@ -114,7 +114,7 @@ export class _Connection {
     }
   }
 
-  wait_connected() {
+  waitConnected() {
     return this._hello
   }
 
