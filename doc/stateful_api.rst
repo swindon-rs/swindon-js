@@ -20,7 +20,7 @@ Here is the example request to subscribe for simple pub-sub channel:
 .. code-block:: javascript
 
   componentDidMount() {
-    this.guard = swindon
+    this.guard = swindon.guard()
         .init('notifications.subscribe', [mytopic])
         .listen('notifications.'+mytopic, message => {
            this.setState(message.n_notifications)
