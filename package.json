@@ -1,7 +1,9 @@
 {
-  "name": "@evo/swindon",
-  "version": "0.0.4",
-  "description": "Lightweight ws wrapper",
+  "name": "swindon",
+  "version": "0.2.0",
+  "license": "MIT",
+  "description": "A small client library for swindon webserver",
+  "repository": "https://github.com/swindon-rs/swindon-js",
   "main": "lib/swindon.js",
   "scripts": {
     "prepublish": "npm run test",
@@ -15,10 +17,7 @@
     "swindon"
   ],
   "author": {
-    "name": ""
-  },
-  "peerDependencies": {
-    "webpack": "2.0.0"
+    "name": "Evo.company"
   },
   "devDependencies": {
     "assert": "^1.4.1",

@@ -1,0 +1,13 @@
+language: node_js
+node_js:
+- "6"
+sudo: false
+env:
+  secure: "qBd/xm0WS1OG52CrW2CbpV/Nqu4d91nRF+8j5yskSR3fhAcLJUUms5XrTqAeNnpPP4XRGORRPgr50ZA6u/eNopC6lyQP6bU0KHHmATKdjOHaIshofsmjhWr3H8Zw3DvRB99/hboKyTL1tT9f52f7SyCiOt5nOjoF+9kScI4DtmmseLuB0vD//ipmQ7Gv7++QhqPMxnoSzp5D+dD30tYgWFzeuxxYKalgV+XJSnh+IrFjR00UTdn7s6A72MzTeelhh3yNqHvFVnEEsnio/04X3S3Q0BxjWTqRILoOG6ZWzyutqTh2W9dINpdls7SAn0YMZvNLTefcNSNcW3JFwY3gFnLTvH7CpMEnMNjmkpRHUke0KIFuEf1GMN9PBfKzKu0BJRzaP4v86fie0opkU5J8ioVUVX9zneKFnXgT0QaN3HMmjazaYhrNMm3x3FBz7/wWOCN1foIa7HW7+UznIUR+2shlXIoWo6W2avirUl+XOD9UfjYgbo6BtMY/rvYDAOVpPK4Hi+DcFtRSaXWZl61UHfi5bJHqL7aMddRDXBw3ewbkr03WnJYduCRHYd4h/DTiewe+NByTYncU4VmHqzsvsLxwfEQDKKqstOepCcumDi9iYcyU2fkV8ZQp3GmRpxkrTosm1s1opvh+6+uGzq7x9yukh4AhLmj+GM8NvzDcnS8="
+after_success: |
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  pip install sphinx sphinx_rtd_theme ghp-import --user &&
+  make html -C doc SPHINXBUILD=~/.local/bin/sphinx-build &&
+  ~/.local/bin/ghp-import -n doc/_build/html &&
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
