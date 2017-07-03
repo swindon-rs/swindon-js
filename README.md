@@ -1,49 +1,71 @@
 # SwindonJS
-Promise based client web socket wrapper.
+
+**Status: Beta** (not all features are implemented yet)
 
 Makes it easier to chain ur async actions with ws and structured data in send method, controls connect state.
 
-# Installation
+## Installation
 
-`npm install --save -E @evo/swindon`
+`npm install --save -E swindon`
 
-# Usage
+## Basic Usage
 
-Initializing Swindon
+Initializing Swindon:
 
 ```js
     import Swindon from 'swindon';
-    
-    const connectionUrl = 'ws://holocost:8080';
-    const callBack = (requestMeta, data) => { /* ur code */ };
-    
-    const oSwindon = new Swindon(connectionUrl,{
-        result: callBack,
-        error: callBack,
-        hello: callBack,
-        message: callBack,
-        lattice: callBack,
-    }, { debug: true, serverTimout: 1000 });
+
+    const swindon = new Swindon('/ws');
 ```
 
-Next we can make some actions right after connection is done
+This creates a auto-reconnecting instance of the library. It's adviced that
+this object a singleton as swindon allows multiple applications to be joined
+together using single websocket.
+
+Now we can make method calls:
 
 ```js
-    oSwindon.connect()
-        .then((data) => {
-            makeStuff(data);
-            // etc...
-        })
-        .catch((e) => { throw Error(e) });;
+    const result = await swindon.call("my_method", ['arg1'], {'kwarg1': 1})
 ```
 
-Sending data, and make something after
+Technically you can wait for connection to be established:
 
 ```js
-    oSwindon.send('method', [1,2,3], { msg: 'hi there'} )
-        .then(({ requestMeta, data }) => {
-            makeStuff(requestMeta, data);
-            // etc...
-        })
-        .catch((e) => { throw Error(e) });
+    await swindon.waitConnected()
 ```
+
+But that is rarely useful, because we usually queue `call`'s internally.
+
+## Getting User Profile
+
+Swindon sends minimal user info (at least `user_id`) right after connection
+is established (technically in `hello` message). You can fetch it like this:
+
+```js
+    const user_info = await swindon.waitConnected()
+```
+
+## Subscriptions
+
+Because swindon allows only subcriptions and unsubscriptions from the backend
+we combine "subscription" API with the method call:
+
+```js
+    const guard = swindon.guard()
+        .init('notifications.subscribe', [mytopic])
+        .listen('notifications.'+mytopic, message => {
+            // react-like code
+            this.setState(message.n_notifications)
+        })
+        .deinit('notifications.unsubscribe', [mytopic])
+```
+
+Then when component doesn't need the data any more just call "close":
+
+```js
+    guard.close()
+```
+
+Note: `notifications.subscribe(mytopic)` will be called on every reconnect of
+the websocket, until `close` is called.
+
