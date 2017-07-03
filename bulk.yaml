@@ -1,0 +1,16 @@
+minimum-bulk: v0.4.1
+
+versions:
+
+- file: package.json
+  regex: ^\s*"version":\s*"([^"]+)"
+
+- file: doc/conf.py
+  regex: ^version\s*=\s*'(\S+)'
+  partial-version: ^\d+\.\d+
+
+- file: doc/conf.py
+  regex: ^release\s*=\s*'(\S+)'
+
+- file: README.md
+  regex: swindon@(\S+)
