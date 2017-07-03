@@ -6,7 +6,7 @@ import sinon from 'sinon';
 import { Server } from 'mock-socket';
 import regeneratorRuntime from 'regenerator-runtime'
 
-import Swindon from './../lib/swindon';
+import { Swindon } from './../lib/swindon';
 
 
 const wsUrl = '/public';

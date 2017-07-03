@@ -7,7 +7,7 @@ const OK_DURATION = 10000
 const OK_TIMEOUT = 100     // 100 ms, when connection is fine
 const TIMEOUTS = [1000, 2000, 10000, 30000, 60000, 300000]  // 5 minutes max
 
-export default class Swindon {
+export class Swindon {
   constructor(url, options) {
     this._url = url
     this._options = {
