@@ -53,7 +53,7 @@ export class Swindon {
     this._clearReconnect()
     this._started = Date.now()
     this._newState('connecting', null)
-    const ws = new WebSocket(this._url)
+    const ws = new WebSocket(this._url, "v1.swindon-lattice+json")
     ws.onopen = ev => {
       this._newState('connecting', null)
     }
