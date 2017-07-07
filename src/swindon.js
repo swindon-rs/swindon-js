@@ -94,7 +94,7 @@ export class Swindon {
     this._clearReconnect()
 
     let timeo = OK_TIMEOUT
-    if(Date.now() - this._started >= OK_DURATION) {
+    if(Date.now() - this._started <= OK_DURATION) {
       timeo = TIMEOUTS[this._reconnectIndex];
       this._reconnectIndex = Math.min(this._reconnectIndex+1,
                                        TIMEOUTS.length - 1);
