@@ -113,6 +113,21 @@ export class Swindon {
   _reconnect() {
     this._initConnection()
   }
+  /**
+   * Force reconnect now. For example, if user clicks a button.
+   *
+   * Note: this doesn't check if connection is already okay, so it's better
+   * to do:
+   *
+   *    if(swindon.state().status != 'wait') {
+   *        swindon.reconnect_now()
+   *    }
+   *
+   */
+  reconnectNow() {
+    // _initConnection() resets the timer anyway just to be sure
+    this._initConnection()
+  }
 
   waitConnected() {
     return this._waitConnected;
