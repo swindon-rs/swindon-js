@@ -1,6 +1,6 @@
 {
   "name": "swindon",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "description": "A small client library for swindon webserver",
   "repository": "https://github.com/swindon-rs/swindon-js",
