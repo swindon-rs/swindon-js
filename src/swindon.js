@@ -94,7 +94,7 @@ export class Swindon {
     this._clearReconnect()
 
     let timeo = OK_TIMEOUT
-    if(new Date() - this._started >= OK_DURATION) {
+    if(Date.now() - this._started >= OK_DURATION) {
       timeo = TIMEOUTS[this._reconnectIndex];
       this._reconnectIndex = Math.min(this._reconnectIndex+1,
                                        TIMEOUTS.length - 1);
@@ -102,6 +102,10 @@ export class Swindon {
       timeo = OK_TIMEOUT
       this._reconnectIndex = 0
     }
+    // Use 50-150% of the specified timeout
+    // This randomizes reconnect delay to make server load smaller in case
+    // all clients need to reconnect (i.e. when server restarted)
+    timeo = timeo * (0.5 + Math.random())
 
     this._newState('wait', Date.now() + timeo)
     this._reconnectTimeout = setTimeout(_ => this._reconnect(), timeo)
