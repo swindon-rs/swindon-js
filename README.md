@@ -15,7 +15,7 @@ Makes it easier to chain ur async actions with ws and structured data in send me
 Initializing Swindon:
 
 ```js
-    import Swindon from 'swindon';
+    import { Swindon } from 'swindon';
 
     const swindon = new Swindon('/ws');
 ```
