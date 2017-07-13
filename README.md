@@ -7,7 +7,7 @@ Makes it easier to chain ur async actions with ws and structured data in send me
 ## Installation
 
 ```
-    npm install --save -E swindon@0.3.2
+    npm install --save -E swindon@0.3.3
 ```
 
 ## Basic Usage
