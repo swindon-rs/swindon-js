@@ -8,7 +8,7 @@ export class _Guard {
     this._swindon = swindon
     this._connection = null
   }
-  init(method_name, positional_args=[], keyword_args={}, callback) {
+  init(method_name, positional_args=[], keyword_args={}, callback=null) {
     this._backendInit.push({
         method_name,
         positional_args,
@@ -26,8 +26,13 @@ export class _Guard {
     }
     return this;
   }
-  deinit(method_name, positional_args=[], keyword_args={}) {
-    this._backendDeinit.push({ method_name, positional_args, keyword_args });
+  deinit(method_name, positional_args=[], keyword_args={}, callback=null) {
+    this._backendDeinit.push({
+      method_name,
+      positional_args,
+      keyword_args,
+      callback,
+    });
     return this;
   }
   listen(topic, callback) {
@@ -46,7 +51,11 @@ export class _Guard {
     }
     if(conn) {
       for(let call of this._backendDeinit) {
-        conn.call(call.method_name, call.positional_args, call.keyword_args)
+        let promise = conn.call(call.method_name,
+                                call.positional_args, call.keyword_args)
+        if(call.callback) {
+          promise.then(call.callback);
+        }
       }
     }
     if(swindon) {
@@ -67,9 +76,7 @@ export class _Guard {
       let promise = conn.call(call.method_name,
                               call.positional_args, call.keyword_args)
       if(call.callback) {
-        promise.then((data) => {
-          call.callback(data);
-        })
+        promise.then(call.callback);
       }
     }
   }

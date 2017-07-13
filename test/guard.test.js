@@ -58,4 +58,45 @@ describe('Basic guard', () => {
     let r2 = await wait2
     assert.equal(8, r2)
   });
+
+  it('deinit-callback', async () => {
+
+    let swindon = {_connection: null,
+                   _removeGuard: sinon.spy(),
+                   _status: 'wait'};
+
+    let accept1
+    let wait1 = new Promise((a, _) => accept1 = a)
+    const initCallback = (value) => accept1(value)
+
+    let accept2
+    let wait2 = new Promise((a, _) => accept2 = a)
+    const deinitCallback = (value) => accept2(value)
+
+    // not connected yet
+    let guard = new _Guard(swindon)
+      .init('notifications.subscribe', ['yyy.zzz'], {}, initCallback)
+      .deinit('notifications.unsubscribe', ['yyy.zzz'], {}, deinitCallback);
+
+    // emulate connection
+    let conn = connection();
+    let counter = 13
+    conn.call = sinon.spy(function() {
+        return new Promise((accept) => {
+          accept(counter++);
+        })
+    });
+    swindon._connection = conn
+    swindon._status = 'active'
+
+    guard._subscribe();
+    guard._callInits();
+
+    let r1 = await wait1
+    assert.equal(13, r1)
+
+    guard.close()
+    let r2 = await wait2
+    assert.equal(14, r2)
+  });
 });
