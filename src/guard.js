@@ -9,7 +9,12 @@ export class _Guard {
     this._connection = null
   }
   init(method_name, positional_args=[], keyword_args={}, callback) {
-    this._backendInit.push({ method_name, positional_args, keyword_args, callback });
+    this._backendInit.push({
+        method_name,
+        positional_args,
+        keyword_args,
+        callback,
+    });
     if(this._swindon._status == 'active') {
       this._swindon._connection
         .call(method_name, positional_args, keyword_args)
@@ -59,12 +64,13 @@ export class _Guard {
   _callInits() {
     const conn = this._connection = this._swindon._connection
     for(let call of this._backendInit) {
-      conn.call(call.method_name, call.positional_args, call.keyword_args)
-        .then((data) => {
-          if (call.callback) {
-            call.callback(data);
-          }
+      let promise = conn.call(call.method_name,
+                              call.positional_args, call.keyword_args)
+      if(call.callback) {
+        promise.then((data) => {
+          call.callback(data);
         })
+      }
     }
   }
 }
