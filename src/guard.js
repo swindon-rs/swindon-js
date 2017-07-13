@@ -8,11 +8,16 @@ export class _Guard {
     this._swindon = swindon
     this._connection = null
   }
-  init(method_name, positional_args=[], keyword_args={}) {
-    this._backendInit.push({ method_name, positional_args, keyword_args });
+  init(method_name, positional_args=[], keyword_args={}, callback) {
+    this._backendInit.push({ method_name, positional_args, keyword_args, callback });
     if(this._swindon._status == 'active') {
       this._swindon._connection
         .call(method_name, positional_args, keyword_args)
+        .then((data) => {
+          if (callback) {
+            callback(data);
+          }
+        })
     }
     return this;
   }
@@ -55,6 +60,11 @@ export class _Guard {
     const conn = this._connection = this._swindon._connection
     for(let call of this._backendInit) {
       conn.call(call.method_name, call.positional_args, call.keyword_args)
+        .then((data) => {
+          if (call.callback) {
+            call.callback(data);
+          }
+        })
     }
   }
 }

@@ -28,4 +28,22 @@ describe('Basic guard', () => {
     assert(swindon._removeGuard.calledWith(guard))
 
   });
+
+  it('init-callback', (done) => {
+
+    let conn = connection();
+    let swindon = {_connection: conn, _removeGuard: sinon.spy(), _status: 'active'};
+    const initCallback = sinon.spy();
+    let guard = new _Guard(swindon)
+      .init('notifications.subscribe', ['yyy.zzz'], {}, initCallback);
+
+    guard._subscribe();
+    guard._callInits(); //re-init
+
+    setTimeout(() => {  // Let promise resolve
+      assert(initCallback.calledWith('42'));
+      assert(initCallback.callCount === 2);  // on init and on re-init
+      done();
+    }, 0);
+  });
 });
