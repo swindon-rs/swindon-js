@@ -10,6 +10,7 @@ Welcome to Swindon.js's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   basic_api
    stateful_api
 
 

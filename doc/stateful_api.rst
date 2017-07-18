@@ -1,10 +1,12 @@
 .. default-domain: js
 
+.. _stateful_api:
+
 ============
 Stateful API
 ============
 
-Unlike in low-level API stateful API has the following goals:
+Unlike in `low-level API <basic_api>`_ stateful API has the following goals:
 
 1. Seamlessly reconnect websocket (except "reconnecting..." label)
 2. Keep data updated on reconnect:
