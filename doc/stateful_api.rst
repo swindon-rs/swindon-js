@@ -6,7 +6,7 @@
 Stateful API
 ============
 
-Unlike in `low-level API <basic_api>`_ stateful API has the following goals:
+Unlike in :ref:`low-level API <basic_api>` stateful API has the following goals:
 
 1. Seamlessly reconnect websocket (except "reconnecting..." label)
 2. Keep data updated on reconnect:
@@ -89,10 +89,35 @@ API Description
         .. note:: Library doesn't ensure that this connection is subscribed
            to the specified topic in swindon itself. It's your responsibility
            to make sure that backend call executed in ``init`` subscribes
-           current connection to specified ``topic`` using the API_, and that
-           it unsubscribes in ``deinit``. Guard frees resources occupied by
-           client-side subscription in ``close``.
+           current connection to specified ``topic`` using the `API
+           <pub-sub-api_>`_, and that it unsubscribes in ``deinit``. Guard
+           frees resources occupied by client-side subscription in ``close``.
 
-        .. _api: https://swindon-rs.github.io/swindon/swindon-lattice/backend.html#pub-sub-subscriptions
+
+   .. method:: listen_lattice(namespace, callback)
+
+        A (client-side) subscription to the lattice namespace.
+
+        ``callback(data, metadata)`` is a function called when data arrives
+        for specified namespace. Data is a javascript object that contains
+        private and public keys with values. Only ones that have changed
+        are guaranteed to be updated. See
+        `frontend API reference <frontend-docs_>`_ for more info.
+
+        The only guaranteed field in ``metadata`` is ``namespace`` which
+        represents namespace this callback subscribed to. Refer to swindon
+        docs for more info on ``metadata``.
+
+        .. note:: Library doesn't ensure that this connection is subscribed
+           to the specified topic in swindon itself. It's your responsibility
+           to make sure that backend call executed in ``init`` subscribes
+           current connection to specified ``lattice`` with neede keys
+           using the `API <lattice-API_>`_, and that it unsubscribes in ``deinit``.
+           Guard frees resources occupied by client-side subscription
+           in ``close``.
+
+.. _pub-sub-api: https://swindon-rs.github.io/swindon/swindon-lattice/backend.html#pub-sub-subscriptions
+.. _lattice-api: https://swindon-rs.github.io/swindon/swindon-lattice/backend.html#lattice-subscriptions
+.. _frontend-docs: https://swindon-rs.github.io/swindon/swindon-lattice/frontend.html
 
 
