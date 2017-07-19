@@ -12,6 +12,7 @@ Welcome to Swindon.js's documentation!
 
    basic_api
    stateful_api
+   lattice
 
 
 Indices and tables

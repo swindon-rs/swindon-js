@@ -94,19 +94,15 @@ API Description
            frees resources occupied by client-side subscription in ``close``.
 
 
-   .. method:: listen_lattice(namespace, callback)
+   .. method:: lattice(namespace, prefix, lattice_object)
 
-        A (client-side) subscription to the lattice namespace.
+        Registers lattice object within this guard. All callback and state
+        management is implemented in :class:`Lattice` itself.
 
-        ``callback(data, metadata)`` is a function called when data arrives
-        for specified namespace. Data is a javascript object that contains
-        private and public keys with values. Only ones that have changed
-        are guaranteed to be updated. See
-        `frontend API reference <frontend-docs_>`_ for more info.
-
-        The only guaranteed field in ``metadata`` is ``namespace`` which
-        represents namespace this callback subscribed to. Refer to swindon
-        docs for more info on ``metadata``.
+        The respective class lattice tracks all the keys prefixed by ``prefix``
+        with the prefix itself removed. This allows easy composition of
+        lattices from different applications without applications themselves
+        managing the prefix.
 
         .. note:: Library doesn't ensure that this connection is subscribed
            to the specified topic in swindon itself. It's your responsibility
