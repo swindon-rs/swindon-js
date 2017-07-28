@@ -2,6 +2,7 @@ import { _Guard } from './guard'
 export { _Guard } from './guard'
 import { _Connection } from './connection'
 export { _Connection } from './connection'
+export { Lattice, InvalidType } from './lattice'
 
 const OK_DURATION = 10000
 const OK_TIMEOUT = 100     // 100 ms, when connection is fine

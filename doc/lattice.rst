@@ -54,7 +54,7 @@ API
 .. method:: updateCounter(key, variable)
 
    Update internal state of a counter CRDT (variable name has ``_counter``
-   suffix stripped).
+   suffix stripped). Returns ``true`` if value really changed.
 
    See `update notes`_.
 
@@ -65,7 +65,7 @@ API
 .. method:: updateSet(key, variable)
 
    Update internal state of a set CRDT (variable name has ``_set``
-   suffix stripped).
+   suffix stripped). Returns ``true`` if value really changed.
 
    See `update notes`_.
 
@@ -83,6 +83,9 @@ pass smaller value to ``updateCounter`` it will be ignored.
 Also this API doesn't ensure that corresponding value is updated at the server
 side. It's application responsibility to call needed application-specific
 server-side method that updates value in the database.
+
+All update methods throw ``InvalidType`` when type of the value does not match
+expected one.
 
 .. warning:: Currently there is no way to undo optimistic transaction, we
    will add some API to support this use case in future.
