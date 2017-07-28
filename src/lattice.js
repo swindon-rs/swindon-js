@@ -12,6 +12,11 @@ export function InvalidType(expected, value) {
 InvalidType.prototype = Object.create(Error.prototype)
 InvalidType.prototype.constructor = InvalidType
 
+function ends_with(a, b) {
+    return a.length >= b.length && a.substr(a.length - b.length) == b
+}
+
+
 export class Lattice {
     constructor({onUpdate=null}={}) {
         this._onUpdate = onUpdate
@@ -65,6 +70,35 @@ export class Lattice {
             }
         }
         return res
+    }
+    _update(values) {
+        let updated_keys = []
+        for(var key in values) {
+            let cur = values[key]
+            let updated = false;
+            for(var fullvar in cur) {
+                let value = cur[fullvar]
+                let has_updates = false
+                if(ends_with(fullvar, "_counter")) {
+                    let variable = fullvar.substr(0, fullvar.length - 8);
+                    has_updates = this._updateCounter(key, variable, value);
+                } else if(ends_with(fullvar, "_set")) {
+                    let variable = fullvar.substr(0, fullvar.length - 4);
+                    has_updates = this._updateSet(key, variable, value);
+                } else {
+                    console.error("Unsupported variable type", fullvar)
+                }
+                if(has_updates) {
+                     updated = true;
+                }
+            }
+            if(updated) {
+                updated_keys.push(key)
+            }
+        }
+        if(updated_keys.length && this._onUpdate) {
+            this._onUpdate(updated_keys, this)
+        }
     }
     allKeys() {
         return Object.keys(this._keys)
