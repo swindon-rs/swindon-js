@@ -18,27 +18,33 @@ function ends_with(a, b) {
 
 
 export class Lattice {
+
     constructor({onUpdate=null}={}) {
         this._onUpdate = onUpdate
         this._keys = {}
     }
+
     getCounter(key, variable) {
         return (this._keys[key] || {})[variable + '_counter'] || 0
     }
+
     getSet(key, variable) {
         return Object.keys((this._keys[key] || {})[variable + '_set'] || {})
     }
+
     updateCounter(key, variable, value) {
         if(Math.trunc(value) !== value) {
             throw new InvalidType("integer", value)
         }
-        return this._updateCounter(key, variable, value)
-    }
-    _updateCounter(key, variable, value) {
         let kval = this._keys[key]
         if(!kval) {
             this._keys[key] = kval = {}
         }
+        return this._updateCounter(key, variable, value)
+    }
+
+    _updateCounter(key, variable, value) {
+        let kval = this._keys[key]
         let fullvar = variable + '_counter'
         if(!kval[fullvar] || kval[fullvar] < value) {
             kval[fullvar] = value
@@ -46,17 +52,20 @@ export class Lattice {
         }
         return false
     }
+
     updateSet(key, variable, value) {
         if(!Array.isArray(value)) {
             throw new InvalidType("array of strings", value)
         }
-        return this._updateSet(key, variable, value)
-    }
-    _updateSet(key, variable, value) {
         let kval = this._keys[key]
         if(!kval) {
             this._keys[key] = kval = {}
         }
+        return this._updateSet(key, variable, value)
+    }
+
+    _updateSet(key, variable, value) {
+        let kval = this._keys[key]
         let fullvar = variable + '_set'
         let sval = kval[fullvar]
         if(!sval) {
@@ -71,11 +80,18 @@ export class Lattice {
         }
         return res
     }
+
     _update(values) {
         let updated_keys = []
         for(var key in values) {
             let cur = values[key]
             let updated = false;
+            if(!(key in this._keys)) {
+                // new keys added to `updated_keys` even if there are no vars
+                // but only first time they appear
+                this._keys[key] = {}
+                updated = true;
+            }
             for(var fullvar in cur) {
                 let value = cur[fullvar]
                 let has_updates = false
@@ -100,6 +116,7 @@ export class Lattice {
             this._onUpdate(updated_keys, this)
         }
     }
+
     allKeys() {
         return Object.keys(this._keys)
     }

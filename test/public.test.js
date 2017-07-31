@@ -145,6 +145,7 @@ describe('Swindon Public actions', () => {
 });
 
 describe('Swindon lattices', () => {
+
     it('lattice1', async () => {
         let srv = server('/7')
         try {
@@ -203,6 +204,58 @@ describe('Swindon lattices', () => {
           assert.deepEqual(lattice.getCounter("1", "a"), 105)
           assert.deepEqual(lattice.getSet("1", "b"), ["a", "b", "c"])
           assert.deepEqual(lattice.getCounter("2", "x"), 200)
+
+        } finally {
+          swindon.close()
+          srv.close()
+        }
+    })
+
+    it('empty keys', async () => {
+        let srv = server('/8')
+        try {
+          srv.on('message', data => process.nextTick(() => {
+            srv.sendj("result", {"request_id": 1}, "subscribed")
+            process.nextTick(() => {
+              srv.sendj("lattice", {"namespace": "kittens"}, {
+                // empty key triggers key update too
+                "key1": {}
+              })
+              process.nextTick(() => {
+                srv.sendj("lattice", {"namespace": "kittens"}, {
+                    "key1": {},
+                    // .. but it trigers update only first time
+                    "key2": {},
+                })
+              })
+            })
+          }))
+          var swindon = new Swindon('/8')
+          await swindon.waitConnected()
+
+          let accept
+          let wait_update = new Promise((a, _) => {
+            accept = arg => {
+                wait_update = new Promise((a, _) => { accept = a })
+                a(arg)
+            }
+          })
+
+          let lattice = new Lattice({
+            onUpdate(keys) {
+              accept(keys)
+            }
+          })
+
+          let guard = swindon.guard()
+              .init('subscribe', 'kittens')
+              .lattice('kittens', 'key', lattice)
+
+          let update1 = await wait_update
+          assert.deepEqual(update1, ['1'])
+
+          let update2 = await wait_update
+          assert.deepEqual(update2, ['2'])
 
         } finally {
           swindon.close()
