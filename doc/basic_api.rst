@@ -43,6 +43,9 @@ Basic API
                     case "connecting":
                         set_status("Connecting...")
                         break;
+                    case "unsupported":
+                        set_status("WebSockets are unsupported by browser")
+                        break;
                     default:
                         // it's "closed" or maybe some future value
                         set_status("No connection.");
@@ -116,6 +119,9 @@ Basic API
           in this state
         * ``wait`` connection is broken and will reconnect later
         * ``closed`` the :meth:`close` called on connection
+        * ``unsupported`` websocket is not supported by the browser,
+          creating lattices, guards, and calling methods should work but,
+          will never return successful result
 
       ``reconnect_time``
 

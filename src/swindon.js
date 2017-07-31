@@ -54,7 +54,14 @@ export class Swindon {
     this._clearReconnect()
     this._started = Date.now()
     this._newState('connecting', null)
-    const ws = new WebSocket(this._url, "v1.swindon-lattice+json")
+    let ws
+    try {
+        ws = new WebSocket(this._url, "v1.swindon-lattice+json")
+    } catch(e) {
+        console.error("Can't create websocket:", e)
+        this._newState('unsupported', null)
+        return
+    }
     ws.onopen = ev => {
       this._newState('connecting', null)
     }
