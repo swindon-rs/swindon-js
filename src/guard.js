@@ -49,7 +49,7 @@ export class _Guard {
     if(this._swindon._connection) {
       this._cleanup.push(this._swindon._connection.subscribe(topic, callback))
     }
-    return this;
+    return this
   }
   lattice(namespace, prefix, lattice) {
     let ns = this._lattices[namespace]
@@ -62,6 +62,7 @@ export class _Guard {
         }
     }
     this._lattices[namespace].push({ prefix, lattice })
+    return this
   }
 
   close() {
