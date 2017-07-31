@@ -120,7 +120,7 @@ export class Swindon {
    * to do:
    *
    *    if(swindon.state().status != 'wait') {
-   *        swindon.reconnect_now()
+   *        swindon.reconnectNow()
    *    }
    *
    */

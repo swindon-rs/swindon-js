@@ -8,16 +8,31 @@ export class _Guard {
     this._swindon = swindon;
     this._connection = null
   }
-  init(method_name, positional_args=[], keyword_args={}) {
-    this._backendInit.push({ method_name, positional_args, keyword_args });
+  init(method_name, positional_args=[], keyword_args={}, callback=null) {
+    this._backendInit.push({
+        method_name,
+        positional_args,
+        keyword_args,
+        callback,
+    });
     if(this._swindon._status === 'active') {
       this._swindon._connection
-        .call(method_name, positional_args, keyword_args);
+        .call(method_name, positional_args, keyword_args)
+        .then((data) => {
+          if (callback) {
+            callback(data);
+          }
+        })
     }
     return this;
   }
-  deinit(method_name, positional_args=[], keyword_args={}) {
-    this._backendDeinit.push({ method_name, positional_args, keyword_args });
+  deinit(method_name, positional_args=[], keyword_args={}, callback=null) {
+    this._backendDeinit.push({
+      method_name,
+      positional_args,
+      keyword_args,
+      callback,
+    });
     return this;
   }
   listen(topic, callback) {
@@ -36,7 +51,11 @@ export class _Guard {
     }
     if(conn) {
       for(let call of this._backendDeinit) {
-        conn.call(call.method_name, call.positional_args, call.keyword_args);
+        let promise = conn.call(call.method_name,
+                                call.positional_args, call.keyword_args);
+        if(call.callback) {
+          promise.then(call.callback);
+        }
       }
     }
     if(swindon) {
@@ -54,7 +73,11 @@ export class _Guard {
   _callInits() {
     const conn = this._connection = this._swindon._connection;
     for(let call of this._backendInit) {
-      conn.call(call.method_name, call.positional_args, call.keyword_args);
+      let promise = conn.call(call.method_name,
+                              call.positional_args, call.keyword_args);
+      if(call.callback) {
+        promise.then(call.callback);
+      }
     }
   }
 }
