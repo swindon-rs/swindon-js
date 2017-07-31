@@ -1,6 +1,6 @@
 # SwindonJS
 
-**Status: Beta** (not all features are implemented yet)
+**Status: Beta**
 
 [Documentation](http://swindon-rs.github.io/swindon-js/)
 
