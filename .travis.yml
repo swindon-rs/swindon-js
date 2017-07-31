@@ -13,6 +13,7 @@ after_success: |
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
 deploy:
   provider: npm
+  skip_cleanup: true
   email: "paul@colomiets.name"
   api_key:
     secure: "NS6StVbeegBwCotR0KOrP1VrKQ1V+8g8A/eH30070E0QjuxU6OK/TYpSMx86dbdctNzcMmodyUiUOMzDEr+QrIXd+RXrINkHwwW/YTCNsxGDilG9+IFN7iGHfkNffIA1wQu7uvZLWwHBxt1yCORDZquDFG3O4NEhM5K8Kp12giNhXpJMYpPjvdNp6F9XIuw3kBJuc2UZFuWNFQ3zCKJRGGCemRdE2I+tIrB1C4ad4rMsCw1onXkn3DltlaUkBI5bwolE/Yl4DS20RAswnhZPR5fbkd5fjN3tSGA6h7Z8aVFzrv5rZNO6UkhjGR0p41kf4pZItNOHm0TOkPrxOOXL01brXnmBPKSwgTWkW2RB32aukNdkDghGWmhd4uGqFKxg80lsIXPWUggZtydzuMqQBn3RnUyPJCLxUFCQeFq4ujALs/jstjYuymKkN3cKrtuR8qpFDd6eqpm/bqBgjXaz6jXUhDRpannbvxwfVk0PZ7BwbJcEemy+wPYIDFkyweT9YeQ6+zJoUHzO8BK9pbLJ9oCof3DWRP4aTNxvADiP/uHSLH7tSe6K+34eOc85phOPMNr2vftSSHYQrvsHmGu5myaXtDCrexpqkV6Rp5nPQLTlPPe/Zgy8cUkZhmjnJdKZgAPJ8MC7Tfs9ExcEZbj5WbZxdcXlEYfPiwBY/h1c9vM="
