@@ -6,7 +6,7 @@ import sinon from 'sinon';
 import { Server } from 'mock-socket';
 import regeneratorRuntime from 'regenerator-runtime'
 
-import { Swindon } from './../lib/swindon';
+import { Swindon, Lattice } from './../lib/swindon';
 
 
 const wsUrl = '/public';
@@ -144,3 +144,70 @@ describe('Swindon Public actions', () => {
     });
 });
 
+describe('Swindon lattices', () => {
+    it('lattice1', async () => {
+        let srv = server('/7')
+        try {
+          srv.on('message', data => process.nextTick(() => {
+            srv.sendj("result", {"request_id": 1}, "subscribed")
+            process.nextTick(() => {
+              srv.sendj("lattice", {"namespace": "kittens"}, {
+                "key1": {"a_counter": 100, "b_set": ["a", "b"]},
+                "key2": {"x_counter": 200},
+              })
+              process.nextTick(() => {
+                srv.sendj("lattice", {"namespace": "kittens"}, {
+                    "key1": {"a_counter": 105, "b_set": ["c", "b"]},
+                    "key2": {"x_counter": 50},
+                })
+              })
+            })
+          }))
+          var swindon = new Swindon('/7')
+          await swindon.waitConnected()
+
+          let accept
+          let wait_update = new Promise((a, _) => {
+            accept = arg => {
+                // need to check intermediate state here, because next
+                // callback is just waiting for us right now
+                assert.deepEqual(lattice.getCounter("1", "a"), 100)
+                assert.deepEqual(lattice.getSet("1", "b"), ["a", "b"])
+                assert.deepEqual(lattice.getCounter("2", "x"), 200)
+                // replace accept with next function
+                wait_update = new Promise((a, _) => { accept = a })
+                a(arg)
+            }
+          })
+
+          let lattice = new Lattice({
+            onUpdate(keys) {
+              accept(keys)
+            }
+          })
+
+          let guard = swindon.guard()
+              .init('subscribe', 'kittens')
+              .lattice('kittens', 'key', lattice)
+
+          assert.deepEqual(lattice.getCounter("1", "a"), 0)
+          assert.deepEqual(lattice.getSet("1", "b"), [])
+          assert.deepEqual(lattice.getCounter("2", "x"), 0)
+
+          let update1 = await wait_update
+          assert.deepEqual(update1, ['1', '2'])
+
+          let update2 = await wait_update
+          assert.deepEqual(update2, ['1'])
+
+          assert.deepEqual(lattice.getCounter("1", "a"), 105)
+          assert.deepEqual(lattice.getSet("1", "b"), ["a", "b", "c"])
+          assert.deepEqual(lattice.getCounter("2", "x"), 200)
+
+        } finally {
+          swindon.close()
+          srv.close()
+        }
+    })
+
+})

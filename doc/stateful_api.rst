@@ -6,7 +6,7 @@
 Stateful API
 ============
 
-Unlike in `low-level API <basic_api>`_ stateful API has the following goals:
+Unlike in :ref:`low-level API <basic_api>` stateful API has the following goals:
 
 1. Seamlessly reconnect websocket (except "reconnecting..." label)
 2. Keep data updated on reconnect:
@@ -89,10 +89,31 @@ API Description
         .. note:: Library doesn't ensure that this connection is subscribed
            to the specified topic in swindon itself. It's your responsibility
            to make sure that backend call executed in ``init`` subscribes
-           current connection to specified ``topic`` using the API_, and that
-           it unsubscribes in ``deinit``. Guard frees resources occupied by
-           client-side subscription in ``close``.
+           current connection to specified ``topic`` using the `API
+           <pub-sub-api_>`_, and that it unsubscribes in ``deinit``. Guard
+           frees resources occupied by client-side subscription in ``close``.
 
-        .. _api: https://swindon-rs.github.io/swindon/swindon-lattice/backend.html#pub-sub-subscriptions
+
+   .. method:: lattice(namespace, prefix, lattice_object)
+
+        Registers lattice object within this guard. All callback and state
+        management is implemented in :class:`Lattice` itself.
+
+        The respective class lattice tracks all the keys prefixed by ``prefix``
+        with the prefix itself removed. This allows easy composition of
+        lattices from different applications without applications themselves
+        managing the prefix.
+
+        .. note:: Library doesn't ensure that this connection is subscribed
+           to the specified topic in swindon itself. It's your responsibility
+           to make sure that backend call executed in ``init`` subscribes
+           current connection to specified ``lattice`` with neede keys
+           using the `API <lattice-API_>`_, and that it unsubscribes in ``deinit``.
+           Guard frees resources occupied by client-side subscription
+           in ``close``.
+
+.. _pub-sub-api: https://swindon-rs.github.io/swindon/swindon-lattice/backend.html#pub-sub-subscriptions
+.. _lattice-api: https://swindon-rs.github.io/swindon/swindon-lattice/backend.html#lattice-subscriptions
+.. _frontend-docs: https://swindon-rs.github.io/swindon/swindon-lattice/frontend.html
 
 

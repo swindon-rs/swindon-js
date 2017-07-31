@@ -1,6 +1,7 @@
 export class _Connection {
   constructor(websock) {
     this._listeners = {}
+    this._lattices = {}
     this._hello = new Promise((accept, reject) => {
       this._helloAccept = accept;
       this._helloReject = reject;
@@ -65,7 +66,7 @@ export class _Connection {
               handler(data, meta)
             } catch(e) {
               // TODO(tailhook)
-              console.error("Swindon: Error processing message", meta, data)
+              console.error("Swindon: Error processing message", meta, data, e)
             }
           }
         } else {
@@ -74,7 +75,21 @@ export class _Connection {
         return
 
       case 'lattice':
-        console.error('Lattices are not implemented yet')
+        const lattices = this._lattices[meta.namespace]
+        if(lattices) {
+          for(var lat_handler of lattices) {
+            try {
+              // metadata is second param, so you can
+              // ignore it most of the time
+              lat_handler(data, meta)
+            } catch(e) {
+              // TODO(tailhook)
+              console.error("Swindon: Error processing lattice", meta, data, e)
+            }
+          }
+        } else {
+          console.info('Swindon: Unsolicited lattice', meta)
+        }
         return
 
       default:
@@ -109,6 +124,20 @@ export class _Connection {
         l.splice(l.indexOf(callback), 1, 0)
         if(l.length == 0) {
           delete this._listeners[topic]
+        }
+      }
+    }
+  }
+  lattice_subscribe(namespace, callback) {
+    const l = this._lattices[namespace] || []
+    l.push(callback)
+    this._lattices[namespace] = l
+    return () => {
+      const idx = l.indexOf(callback)
+      if(idx >= 0) {
+        l.splice(l.indexOf(callback), 1, 0)
+        if(l.length == 0) {
+          delete this._lattices[namespace]
         }
       }
     }
