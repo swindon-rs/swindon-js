@@ -121,7 +121,7 @@ export class _Connection {
     return () => {
       const idx = l.indexOf(callback)
       if(idx >= 0) {
-        l.splice(l.indexOf(callback), 1, 0)
+        l.splice(l.indexOf(callback), 1)
         if(l.length == 0) {
           delete this._listeners[topic]
         }
@@ -135,7 +135,7 @@ export class _Connection {
     return () => {
       const idx = l.indexOf(callback)
       if(idx >= 0) {
-        l.splice(l.indexOf(callback), 1, 0)
+        l.splice(l.indexOf(callback), 1)
         if(l.length == 0) {
           delete this._lattices[namespace]
         }
