@@ -23,12 +23,10 @@ containers:
   doc:
     setup:
     - !Alpine v3.6
-    - !Install [alpine-base, py-sphinx, make]
-    # If you require additional packages to build docs uncomment this
-    # - !Py3Requirements doc/requirements.txt
+    - !Install [alpine-base, py-sphinx, make, vim]
     - &bulk !Tar
-      url: "http://files.zerogw.com/bulk/bulk-0.4.7.tar.gz"
-      sha256: faec9ee88ee079de3c7cfb95c5900489941b28b24b47411afaec1fae7a277546
+      url: "https://github.com/tailhook/bulk/releases/download/v0.4.9/bulk-v0.4.9.tar.gz"
+      sha256: 23471a9986274bb4b7098c03e2eb7e1204171869b72c45385fcee1c64db2d111
       path: /
 
 commands:
