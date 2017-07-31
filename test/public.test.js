@@ -17,7 +17,7 @@ function server(url) {
 
   mockServer.sendj = function(...args) {
     mockServer.send(JSON.stringify(args))
-  }
+  };
 
   mockServer.on('connection', (server) => {
     mockServer.sendj('hello', { request_id: 1 }, {user_id: 7})
@@ -30,7 +30,7 @@ function server(url) {
 describe('Swindon connection action', () => {
   describe('Init WebSocket', () => {
     it('should create object correctly', () => {
-      let swindon = new Swindon('/1')
+      let swindon = new Swindon('/1');
       try {
         assert(swindon instanceof Swindon, 'must be instance of class');
       } finally {
@@ -39,16 +39,16 @@ describe('Swindon connection action', () => {
     });
 
     it('should connect to Web Socket server', async () => {
-      let srv = server('/2')
-      let swindon = new Swindon('/2')
+      let srv = server('/2');
+      let swindon = new Swindon('/2');
       try {
-        assert.equal(swindon.state().status, 'connecting')
-        let user_info = await swindon.waitConnected()
+        assert.equal(swindon.state().status, 'connecting');
+        let user_info = await swindon.waitConnected();
         assert.equal(swindon.state().status, 'active',
-          'establish ws client-server connection')
+          'establish ws client-server connection');
         assert.equal(user_info.user_id, 7)
       } finally {
-        swindon.close()
+        swindon.close();
         srv.close()
       }
     });
@@ -57,30 +57,30 @@ describe('Swindon connection action', () => {
 
 describe('Swindon Public actions', () => {
     it('should send data, and receive result', async () => {
-        let srv = server('/3')
+        const srv = server('/3');
+        const swindon = new Swindon('/3');
         try {
           srv.on('message', data => {
             assert.deepEqual(JSON.parse(data),
               ["publish", {"request_id": 1}, "something", {}]);
             srv.sendj("result", {"request_id": 1}, "ok")
-          })
-          var swindon = new Swindon('/3')
-          let data = await swindon.call("publish", "something")
+          });
+          let data = await swindon.call("publish", "something");
           assert.equal(data, "ok")
         } finally {
-          swindon.close()
+          swindon.close();
           srv.close()
         }
     });
     it('should call error', async () => {
-        let srv = server('/4')
+        const srv = server('/4');
+        const swindon = new Swindon('/4');
         try {
           srv.on('message', data => {
             assert.deepEqual(JSON.parse(data),
               ["publish", {"request_id": 1}, "something", {}]);
             srv.sendj("error", {"request_id": 1}, "some_error")
-          })
-          var swindon = new Swindon('/4')
+          });
           let error;
           try {
             let data = await swindon.call("publish", "something")
@@ -89,19 +89,19 @@ describe('Swindon Public actions', () => {
           }
           assert.equal(error, "some_error")
         } finally {
-          swindon.close()
+          swindon.close();
           srv.close()
         }
     });
     it('guard subscribe', async () => {
-        let srv = server('/5')
+        const srv = server('/5');
+        const swindon = new Swindon('/5');
         try {
           srv.on('message', data => {
-            srv.sendj("result", {"request_id": 1}, "subscribed")
-            srv.sendj("message", {"topic": "kittens"}, "meaw")
-          })
-          var swindon = new Swindon('/5')
-          let guard
+            srv.sendj("result", {"request_id": 1}, "subscribed");
+            srv.sendj("message", {"topic": "kittens"}, "meaw");
+          });
+          let guard;
           let wait_msg = new Promise(accept => {
             guard = swindon.guard()
               .init('subscribe', 'kittens')
@@ -109,25 +109,25 @@ describe('Swindon Public actions', () => {
                 accept(input)
               })
           });
-          let msg = await wait_msg
-          assert.equal(msg, "meaw")
+          let msg = await wait_msg;
+          assert.equal(msg, "meaw");
           guard.close()
         } finally {
-          swindon.close()
-          srv.close()
+          swindon.close();
+          srv.close();
         }
     });
     it('guard subscribe after connect', async () => {
-        let srv = server('/6')
+        let srv = server('/6');
+        const swindon = new Swindon('/6');
         try {
           srv.on('message', data => process.nextTick(() => {
-            srv.sendj("result", {"request_id": 1}, "subscribed")
-            srv.sendj("message", {"topic": "kittens"}, "meaw")
-          }))
-          var swindon = new Swindon('/6')
-          await swindon.waitConnected()
+            srv.sendj("result", {"request_id": 1}, "subscribed");
+            srv.sendj("message", {"topic": "kittens"}, "meaw");
+          }));
+          await swindon.waitConnected();
 
-          let guard
+          let guard;
           let wait_msg = new Promise(accept => {
             guard = swindon.guard()
               .init('subscribe', 'kittens')
@@ -135,10 +135,10 @@ describe('Swindon Public actions', () => {
                 accept(input)
               })
           });
-          let msg = await wait_msg
+          let msg = await wait_msg;
           assert.equal(msg, "meaw")
         } finally {
-          swindon.close()
+          swindon.close();
           srv.close()
         }
     });
