@@ -2,6 +2,8 @@
 
 **Status: Beta** (not all features are implemented yet)
 
+[Documentation](http://swindon-rs.github.io/swindon-js/)
+
 Makes it easier to chain ur async actions with ws and structured data in send method, controls connect state.
 
 ## Installation
