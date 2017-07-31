@@ -4,6 +4,7 @@ class Connection {
   constructor() {
     this.call = sinon.spy();
     this.subscribe = sinon.spy(x => this._mock_unsubscribe);
+    this.lattice_subscribe = sinon.spy(x => this._mock_unsubscribe);
     this._mock_unsubscribe = sinon.spy();
   }
 }

@@ -89,13 +89,12 @@ export class _Guard {
 
   _subscribe() {
     this._cleanup = []
-    for(let sub of this._listeners) {
-      this._cleanup.push(this._swindon._connection
-                         .subscribe(sub.topic, sub.callback))
+    for(let {topic, callback} of this._listeners) {
+      this._cleanup.push(this._swindon._connection.subscribe(topic, callback))
     }
     for(let namespace in this._lattices) {
       this._cleanup.push(this._swindon._connection
-                         .lattice_subscribe(sub.topic, this._lattice_update))
+                         .lattice_subscribe(namespace, this._lattice_update))
     }
   }
 

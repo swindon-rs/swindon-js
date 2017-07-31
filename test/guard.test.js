@@ -1,11 +1,12 @@
 import assert from 'assert';
 import sinon from 'sinon';
 import { connection } from './mock-swindon';
-import { _Guard } from './../lib/swindon';
+import { _Guard, Lattice } from './../lib/swindon';
 import regeneratorRuntime from 'regenerator-runtime'
 
 
 describe('Basic guard', () => {
+
   it('init-listen-deinit', () => {
 
     let conn = connection()
@@ -25,6 +26,29 @@ describe('Basic guard', () => {
     guard.close()
     assert(conn._mock_unsubscribe.calledWith())
     assert(conn.call.calledWith('notifications.unsubscribe', ['yyy.zzz']))
+
+    assert(swindon._removeGuard.calledWith(guard))
+
+  });
+
+  it('init-lattice-deinit', () => {
+
+    let lat = new Lattice()
+    let conn = connection()
+    let swindon = {_connection: conn, _removeGuard: sinon.spy() }
+    let guard = new _Guard(swindon)
+      .init('rooms.subscribe', ['yyy.zzz'])
+      .lattice('rooms.yyy.zzz', "", lat)
+      .deinit('rooms.unsubscribe', ['yyy.zzz'])
+
+    guard._subscribe()
+    guard._callInits()
+    assert(conn.call.calledWith('rooms.subscribe', ['yyy.zzz']))
+    assert(conn.lattice_subscribe.calledWith('rooms.yyy.zzz'))
+
+    guard.close()
+    assert(conn._mock_unsubscribe.calledWith())
+    assert(conn.call.calledWith('rooms.unsubscribe', ['yyy.zzz']))
 
     assert(swindon._removeGuard.calledWith(guard))
 
