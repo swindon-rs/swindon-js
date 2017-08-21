@@ -32,6 +32,10 @@ export class Lattice {
         return Object.keys((this._keys[key] || {})[variable + '_set'] || {})
     }
 
+    getRegister(key, variable) {
+        return (this._keys[key] || {})[variable + '_register'] || [0, null]
+    }
+
     updateCounter(key, variable, value) {
         if(Math.trunc(value) !== value) {
             throw new InvalidType("integer", value)
@@ -81,6 +85,29 @@ export class Lattice {
         return res
     }
 
+    updateRegister(key, variable, value) {
+        if(!Array.isArray(value) || value.length != 2 ||
+                Math.trunc(value[0]) !== value[0] || value < 0) {
+            throw new InvalidType("a tuple [non_negative_integer, anything]",
+                                  value)
+        }
+        let kval = this._keys[key]
+        if(!kval) {
+            this._keys[key] = kval = {}
+        }
+        return this._updateRegister(key, variable, value)
+    }
+
+    _updateRegister(key, variable, value) {
+        let kval = this._keys[key]
+        let fullvar = variable + '_register'
+        if(!kval[fullvar] || kval[fullvar][0] < value[0]) {
+            kval[fullvar] = value
+            return true
+        }
+        return false
+    }
+
     _update(values) {
         let updated_keys = []
         for(var key in values) {
@@ -101,6 +128,9 @@ export class Lattice {
                 } else if(ends_with(fullvar, "_set")) {
                     let variable = fullvar.substr(0, fullvar.length - 4);
                     has_updates = this._updateSet(key, variable, value);
+                } else if(ends_with(fullvar, "_register")) {
+                    let variable = fullvar.substr(0, fullvar.length - 9);
+                    has_updates = this._updateRegister(key, variable, value);
                 } else {
                     console.error("Unsupported variable type", fullvar)
                 }

@@ -51,7 +51,7 @@ API
    Returns value of counter CRDT (variable name has ``_counter`` suffix
    stripped).
 
-.. method:: updateCounter(key, variable)
+.. method:: updateCounter(key, variable, new_value)
 
    Update internal state of a counter CRDT (variable name has ``_counter``
    suffix stripped). Returns ``true`` if value really changed.
@@ -62,9 +62,21 @@ API
 
    Returns value of set CRDT (variable has ``_set`` suffix stripped).
 
-.. method:: updateSet(key, variable)
+.. method:: updateSet(key, variable, additional_set)
 
    Update internal state of a set CRDT (variable name has ``_set``
+   suffix stripped). Returns ``true`` if value really changed.
+
+   See `update notes`_.
+
+.. method:: getRegister(key, variable)
+
+   Returns value of register CRDT (variable name has ``_register`` suffix
+   stripped). The value is a tuple ``[stamp, value]``, not just value.
+
+.. method:: updateRegister(key, variable, [new_stamp, new_value])
+
+   Update internal state of a register CRDT (variable name has ``_register``
    suffix stripped). Returns ``true`` if value really changed.
 
    See `update notes`_.
