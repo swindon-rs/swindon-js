@@ -7,7 +7,7 @@ Basic API
 =========
 
 
-.. js:class:: Swindon(url, {onStateChange})
+.. js:class:: Swindon(url, {onStateChange, defaultActiveTime})
 
    Create an instance of swindon.
 
@@ -57,6 +57,15 @@ Basic API
        every second to update UI. We don't call ``onStateChange`` periodially,
        this is a responsibility of the application. Use ``state()`` to fetch
        up to date state on such periodic callback.
+
+   ``defaultActiveTime``
+       The amount of time we consider user active after sending any request
+       to server. This corresponds to ``active`` field in client API.
+
+       .. note:: We don't have any way to cancel this value for some requests
+          or to update it whatsoever. It should be doable, but we have no good
+          idea for the API. Please file an issue if you need this or you
+          know how API may look like.
 
    It's expected that this object is a singleton on any web page. You may
    put it into some global application object or module and give access

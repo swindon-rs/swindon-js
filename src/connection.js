@@ -1,5 +1,6 @@
 export class _Connection {
-  constructor(websock) {
+  constructor(websock, options) {
+    this._active_time = options.defaultActiveTime
     this._listeners = {}
     this._lattices = {}
     this._hello = new Promise((accept, reject) => {
@@ -102,7 +103,10 @@ export class _Connection {
   call(method_name, positional_args, keyword_args) {
     this._lastRequestId += 1
     const rid = this._lastRequestId
-    const meta = {request_id: rid}
+    const meta = {
+        request_id: rid,
+        active: this._active_time,
+    }
     const promise = new Promise((accept, reject) => {
       this._requests[rid] = {
         accept: accept,

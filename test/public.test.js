@@ -61,7 +61,7 @@ describe('Swindon Public actions', () => {
         try {
           srv.on('message', data => {
             assert.deepEqual(JSON.parse(data),
-              ["publish", {"request_id": 1}, "something", {}]);
+              ["publish", {"request_id": 1, "active": 120}, "something", {}]);
             srv.sendj("result", {"request_id": 1}, "ok")
           })
           var swindon = new Swindon('/3')
@@ -77,7 +77,7 @@ describe('Swindon Public actions', () => {
         try {
           srv.on('message', data => {
             assert.deepEqual(JSON.parse(data),
-              ["publish", {"request_id": 1}, "something", {}]);
+              ["publish", {"request_id": 1, "active": 120}, "something", {}]);
             srv.sendj("error", {"request_id": 1}, "some_error")
           })
           var swindon = new Swindon('/4')

@@ -17,7 +17,7 @@ describe('Connection', () => {
       });
 
       let wsock = new WebSocket('/ws')
-      let conn = new _Connection(wsock)
+      let conn = new _Connection(wsock, {defaultActiveTime: 120})
       await conn.waitConnected()
       let result = await conn.call("test", [], {})
       assert.equal(result, "ok")
@@ -35,7 +35,7 @@ describe('Connection', () => {
       });
 
       let wsock = new WebSocket('/ws')
-      let conn = new _Connection(wsock)
+      let conn = new _Connection(wsock, {defaultActiveTime: 120})
       conn.subscribe('xxx', value => {
         assert(value == 'yyy')
         done()

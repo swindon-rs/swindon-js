@@ -13,6 +13,7 @@ export class Swindon {
     this._url = url
     this._options = {
       onStateChange: null,
+      defaultActiveTime: 120,
       ...options,
     }
     this._connection = null
@@ -72,7 +73,7 @@ export class Swindon {
       console.log("Swindon: Websocket closed", ev.code, ev.reason)
       this._scheduleReconnect()
     }
-    this._connection = new _Connection(ws)
+    this._connection = new _Connection(ws, this._options)
 
     for(let guard of this._guards) {
       guard._subscribe()
