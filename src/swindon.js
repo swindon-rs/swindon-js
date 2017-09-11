@@ -67,7 +67,7 @@ export class Swindon {
       this._newState('connecting', null)
     }
     ws.onerror = ev => {
-      console.error("Swindon: Websocket error")
+      console.error("Swindon: Websocket error", ev)
     }
     ws.onclose = ev => {
       console.log("Swindon: Websocket closed", ev.code, ev.reason)
