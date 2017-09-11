@@ -6,7 +6,7 @@ import sinon from 'sinon';
 import { Server } from 'mock-socket';
 import regeneratorRuntime from 'regenerator-runtime'
 
-import { Swindon, Lattice } from './../lib/swindon';
+import { Swindon, CallError, Lattice } from './../lib/swindon';
 
 
 const wsUrl = '/public';
@@ -87,7 +87,9 @@ describe('Swindon Public actions', () => {
           } catch(e) {
             error = e;
           }
-          assert.equal(error, "some_error")
+          assert(error instanceof CallError)
+          assert.deepEqual(error.data, "some_error")
+          assert.deepEqual(error.metadata, {request_id: 1})
         } finally {
           swindon.close()
           srv.close()

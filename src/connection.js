@@ -1,3 +1,15 @@
+// Error subclassing from mozilla docs
+export function CallError(meta, data) {
+    let err = Error("Call error")
+    this.name = 'CallError';
+    this.message = err.message
+    this.stack = err.stack
+    this.metadata = meta
+    this.data = data
+}
+CallError.prototype = Object.create(Error.prototype)
+CallError.prototype.constructor = CallError
+
 export class _Connection {
   constructor(websock, options) {
     this._active_time = options.defaultActiveTime
@@ -43,7 +55,7 @@ export class _Connection {
         delete this._requests[meta.request_id]
         // TODO(tailhook) wrap it into some error object
         if(promise) {
-          promise.reject(data)
+          promise.reject(new CallError(meta, data))
         } else {
           console.error('Swindon: Unsolicited error reply',
             meta.request_id, data)
