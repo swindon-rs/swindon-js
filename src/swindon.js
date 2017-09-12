@@ -1,7 +1,7 @@
 import { _Guard } from './guard'
 export { _Guard } from './guard'
 import { _Connection } from './connection'
-export { CallError, _Connection } from './connection'
+export { CallError, FatalError, _Connection } from './connection'
 export { Lattice, InvalidType } from './lattice'
 
 const OK_DURATION = 10000
@@ -23,6 +23,9 @@ export class Swindon {
     this._reconnectTimeout = null
     this._reconnectIndex = 0
     this._reconnectTime = null
+    this._ws_error = null;
+    this._ws_close = null;
+    this._fatal_error = null;
     this._start()
   }
 
@@ -67,9 +70,11 @@ export class Swindon {
       this._newState('connecting', null)
     }
     ws.onerror = ev => {
+      this._ws_error = ev
       console.error("Swindon: Websocket error", ev)
     }
     ws.onclose = ev => {
+      this._ws_close = ev
       console.log("Swindon: Websocket closed", ev.code, ev.reason)
       this._scheduleReconnect()
     }
@@ -81,10 +86,16 @@ export class Swindon {
 
     this._connection.waitConnected().then(({data, metadata}) => {
       this._newState('active', null)
+      this._ws_error = null
+      this._ws_close_code = null
+      this._fatal_error = null
       this._waitConnectedAccept(data)
       for(var guard of this._guards) {
         guard._callInits()
       }
+    }, err => {
+      this._fatal_error = err
+      throw err
     })
   }
 
@@ -170,6 +181,9 @@ export class Swindon {
       status: this._status,
       reconnect_time: this._reconnectTime,
       guards: this._guards.length,
+      last_websocket_error: this._ws_error,
+      last_websocket_close: this._ws_close,
+      last_fatal_error: this._fatal_error,
     }
   }
 

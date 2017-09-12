@@ -29,6 +29,10 @@ Basic API
                 console.log("Websocket status changed", state)
                 switch(state.status) {
                     case "wait":
+                        if(state.last_fatal_error.metadata.http_error == 401) {
+                            // This probably means your session has expired
+                            location.assign('/login')
+                        }
                         let left = Math.round((state.reconnect_time
                                                - Date.now())/1000);
                         if(left < 1) {
@@ -136,6 +140,36 @@ Basic API
 
         Only non-null in ``wait`` state. It represent the time when we
         will try to reconnect again (a ``Date`` object).
+
+      ``last_websocket_error``
+
+        Holds an instance of event object that encountered last time when
+        websocket's error has occured. Basically, if it's not null, your
+        connection was broken in unclean fashion.
+
+        Field is reset when next ``hello`` event arrives.
+
+      ``last_websocket_close``
+
+        Holds an instance of ``CloseEvent`` object encountered last time
+        connection was closed. This object contains ``code`` and ``reason``
+        fields to find out the reason socket is closed.
+
+        Field is reset when next ``hello`` event arrives.
+
+      ``last_fatal_error``
+
+        Holds an instance of ``FatalError`` object of last error sent. It
+        may be earlier error than ``last_websocket_close`` if there was
+        attempt to reconnect after failure.
+
+        Primary reason for looking at this error is to find out that connection
+        is no longer authorized, since this is the only way to reliably
+        transfer error from ``/swindon/authorize_connection`` handler to
+        javascript application.
+
+        Field is reset when next ``hello`` event arrives.
+
 
       More fields may be present for debugging purposes, we don't document
       them yet. You can use introspection to find out fields, but you shouldn't

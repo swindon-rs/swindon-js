@@ -10,6 +10,18 @@ export function CallError(meta, data) {
 CallError.prototype = Object.create(Error.prototype)
 CallError.prototype.constructor = CallError
 
+// Error subclassing from mozilla docs
+export function FatalError(meta, data) {
+    let err = Error("Fatal error")
+    this.name = 'FatalError';
+    this.message = err.message
+    this.stack = err.stack
+    this.metadata = meta
+    this.data = data
+}
+FatalError.prototype = Object.create(Error.prototype)
+FatalError.prototype.constructor = FatalError
+
 export class _Connection {
   constructor(websock, options) {
     this._active_time = options.defaultActiveTime
@@ -63,11 +75,31 @@ export class _Connection {
         return
       }
 
-      case 'hello':
+      case 'fatal_error': {
+        let callback = this._helloReject;
+        this._helloAccept = null
+        this._helloReject = null
+        const promise = this._requests[meta.request_id]
+        delete this._requests[meta.request_id]
+        // TODO(tailhook) wrap it into some error object
+        if(promise) {
+          promise.reject(new CallError(meta, data))
+        } else {
+          console.error('Swindon: Unsolicited error reply',
+            meta.request_id, data)
+        }
+        return
+      }
+
+      case 'hello': {
         // metadata is second param, so you can
         // ignore it most of the time
-        this._helloAccept({ data, meta })
+        let callback = this._helloAccept;
+        this._helloAccept = null
+        this._helloReject = null
+        callback(new FatalError(meta, data))
         return
+      }
 
       case 'message':
         const handlers = this._listeners[meta.topic]
