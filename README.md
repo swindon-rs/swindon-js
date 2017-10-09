@@ -9,7 +9,7 @@ Makes it easier to chain ur async actions with ws and structured data in send me
 ## Installation
 
 ```
-    npm install --save -E swindon@0.5.0
+    npm install --save -E swindon@0.5.1
 ```
 
 ## Basic Usage
