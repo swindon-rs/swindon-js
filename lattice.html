@@ -1,0 +1,208 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Lattice &#8212; Swindon.js 0.5.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Stateful API" href="stateful_api.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="lattice">
+<h1>Lattice<a class="headerlink" href="#lattice" title="Permalink to this headline">¶</a></h1>
+<p>This documents <a class="reference internal" href="#Lattice" title="Lattice"><code class="xref py py-class docutils literal"><span class="pre">Lattice</span></code></a>, for more comprehensive documentation on
+lattices refer to <a class="reference external" href="https://swindon-rs.github.io/swindon/swindon-lattice/">swindon documentation</a>.</p>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Lattice">
+<em class="property">class </em><code class="descname">Lattice</code><span class="sig-paren">(</span><em>{onUpdate}</em><span class="sig-paren">)</span><a class="headerlink" href="#Lattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new lattice. A <a class="reference internal" href="#Lattice" title="Lattice"><code class="xref py py-class docutils literal"><span class="pre">Lattice</span></code></a> instance can be used before
+connection is established so it isn’t created attached to a connection.</p>
+<p>To attach the lattice to a connection <code class="xref py py-meth docutils literal"><span class="pre">Guard.lattice()</span></code> (see
+<a class="reference internal" href="stateful_api.html#stateful-api"><span class="std std-ref">stateful api</span></a>):</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">lat</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lattice</span><span class="p">()</span>
+<span class="c1">// ...</span>
+<span class="nx">swindon</span><span class="p">.</span><span class="nx">guard</span><span class="p">()</span>
+ <span class="p">.</span><span class="nx">init</span><span class="p">(...)</span>
+ <span class="p">.</span><span class="nx">lattice</span><span class="p">(</span><span class="s1">&#39;example-org&#39;</span><span class="p">,</span> <span class="s1">&#39;chat-rooms:&#39;</span><span class="p">,</span> <span class="nx">lat</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Because we explicitly support optimistic updates, you can use lattice
+object before connection is updated or even <code class="xref py py-class docutils literal"><span class="pre">Swindon</span></code> object is
+created.</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">onUpdate(updated_keys,</span> <span class="pre">lattice)</span></code></dt>
+<dd><p class="first">The function called when update is received. The <code class="docutils literal"><span class="pre">updated_keys</span></code> is
+a array of key names updated. And the <code class="docutils literal"><span class="pre">lattice</span></code> is this object.</p>
+<p>The pseudo code handling updates is like this:</p>
+<div class="last highlight-javascript"><div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">key</span> <span class="k">of</span> <span class="nx">updated_keys</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="nx">read_messages</span> <span class="o">=</span> <span class="nx">lattice</span><span class="p">.</span><span class="nx">getCounter</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="s1">&#39;read_messages&#39;</span><span class="p">)</span>
+  <span class="kd">let</span> <span class="nx">total_messages</span> <span class="o">=</span> <span class="nx">lattice</span><span class="p">.</span><span class="nx">getCounter</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="s1">&#39;total_messages&#39;</span><span class="p">)</span>
+  <span class="nx">setUnreadNumber</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">total_messages</span> <span class="o">-</span> <span class="nx">read_messages</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="getCounter">
+<code class="descname">getCounter</code><span class="sig-paren">(</span><em>key</em>, <em>variable</em><span class="sig-paren">)</span><a class="headerlink" href="#getCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value of counter CRDT (variable name has <code class="docutils literal"><span class="pre">_counter</span></code> suffix
+stripped).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="updateCounter">
+<code class="descname">updateCounter</code><span class="sig-paren">(</span><em>key</em>, <em>variable</em>, <em>new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#updateCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update internal state of a counter CRDT (variable name has <code class="docutils literal"><span class="pre">_counter</span></code>
+suffix stripped). Returns <code class="docutils literal"><span class="pre">true</span></code> if value really changed.</p>
+<p>See <a class="reference internal" href="#update-notes">update notes</a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="getSet">
+<code class="descname">getSet</code><span class="sig-paren">(</span><em>key</em>, <em>variable</em><span class="sig-paren">)</span><a class="headerlink" href="#getSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value of set CRDT (variable has <code class="docutils literal"><span class="pre">_set</span></code> suffix stripped).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="updateSet">
+<code class="descname">updateSet</code><span class="sig-paren">(</span><em>key</em>, <em>variable</em>, <em>additional_set</em><span class="sig-paren">)</span><a class="headerlink" href="#updateSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update internal state of a set CRDT (variable name has <code class="docutils literal"><span class="pre">_set</span></code>
+suffix stripped). Returns <code class="docutils literal"><span class="pre">true</span></code> if value really changed.</p>
+<p>See <a class="reference internal" href="#update-notes">update notes</a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="getRegister">
+<code class="descname">getRegister</code><span class="sig-paren">(</span><em>key</em>, <em>variable</em><span class="sig-paren">)</span><a class="headerlink" href="#getRegister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value of register CRDT (variable name has <code class="docutils literal"><span class="pre">_register</span></code> suffix
+stripped). The value is a tuple <code class="docutils literal"><span class="pre">[stamp,</span> <span class="pre">value]</span></code>, not just value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="updateRegister">
+<code class="descname">updateRegister</code><span class="sig-paren">(</span><em>key</em>, <em>variable</em><span class="optional">[</span>, <em>new_stamp</em>, <em>new_value</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#updateRegister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update internal state of a register CRDT (variable name has <code class="docutils literal"><span class="pre">_register</span></code>
+suffix stripped). Returns <code class="docutils literal"><span class="pre">true</span></code> if value really changed.</p>
+<p>See <a class="reference internal" href="#update-notes">update notes</a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="allKeys">
+<code class="descname">allKeys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#allKeys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator over all keys of the lattice (with registered prefix stripped).</p>
+</dd></dl>
+
+</div>
+<div class="section" id="update-notes">
+<h2>Update Notes<a class="headerlink" href="#update-notes" title="Permalink to this headline">¶</a></h2>
+<p>All <code class="docutils literal"><span class="pre">update*</span></code> methods do domain specific update procedure. I.e. if you
+pass smaller value to <code class="docutils literal"><span class="pre">updateCounter</span></code> it will be ignored.</p>
+<p>Also this API doesn’t ensure that corresponding value is updated at the server
+side. It’s application responsibility to call needed application-specific
+server-side method that updates value in the database.</p>
+<p>All update methods throw <code class="docutils literal"><span class="pre">InvalidType</span></code> when type of the value does not match
+expected one.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Currently there is no way to undo optimistic transaction, we
+will add some API to support this use case in future.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Lattice</a><ul>
+<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#update-notes">Update Notes</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="stateful_api.html" title="previous chapter">Stateful API</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/lattice.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, EVO.company.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/lattice.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

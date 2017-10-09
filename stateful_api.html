@@ -1,0 +1,216 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Stateful API &#8212; Swindon.js 0.5.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Lattice" href="lattice.html" />
+    <link rel="prev" title="Basic API" href="basic_api.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="stateful-api">
+<span id="id1"></span><h1>Stateful API<a class="headerlink" href="#stateful-api" title="Permalink to this headline">¶</a></h1>
+<p>Unlike in <a class="reference internal" href="basic_api.html#basic-api"><span class="std std-ref">low-level API</span></a> stateful API has the following goals:</p>
+<ol class="arabic simple">
+<li>Seamlessly reconnect websocket (except “reconnecting…” label)</li>
+<li>Keep data updated on reconnect:<ol class="loweralpha">
+<li>Current values might be updated on server, receive them</li>
+<li>Things subscribed on client should be subscribed again</li>
+</ol>
+</li>
+<li>Unsubscribe at any time</li>
+</ol>
+<div class="section" id="look-a-like">
+<h2>Look-a-like<a class="headerlink" href="#look-a-like" title="Permalink to this headline">¶</a></h2>
+<p>Here is the example request to subscribe for simple pub-sub channel:</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="nx">componentDidMount</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">guard</span> <span class="o">=</span> <span class="nx">swindon</span><span class="p">.</span><span class="nx">guard</span><span class="p">()</span>
+      <span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s1">&#39;notifications.subscribe&#39;</span><span class="p">,</span> <span class="p">[</span><span class="nx">mytopic</span><span class="p">])</span>
+      <span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="s1">&#39;notifications.&#39;</span><span class="o">+</span><span class="nx">mytopic</span><span class="p">,</span> <span class="nx">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
+         <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">n_notifications</span><span class="p">)</span>
+      <span class="p">})</span>
+      <span class="p">.</span><span class="nx">deinit</span><span class="p">(</span><span class="s1">&#39;notifications.unsubscribe&#39;</span><span class="p">,</span> <span class="p">[</span><span class="nx">mytopic</span><span class="p">])</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">guard</span><span class="p">.</span><span class="nx">on_init</span><span class="p">(</span><span class="nx">response</span> <span class="p">=&gt;</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="s1">&#39;nmessages&#39;</span><span class="o">:</span> <span class="nx">response</span><span class="p">.</span><span class="nx">n_notifications</span><span class="p">}))</span>
+  <span class="p">})</span>
+<span class="p">}</span>
+<span class="nx">componentWillUnmount</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">guard</span><span class="p">.</span><span class="nx">close</span><span class="p">()</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">notifications.subscribe</span></code> will be called again on every reconnect, and
+<code class="docutils literal"><span class="pre">notifications.xxx</span></code> subscription is local, and will be put before the request
+is sent (this leaves no opportunity to miss messages).</p>
+</div>
+<div class="section" id="api-description">
+<h2>API Description<a class="headerlink" href="#api-description" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="_Guard">
+<em class="property">class </em><code class="descname">_Guard</code><a class="headerlink" href="#_Guard" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class returned by <code class="docutils literal"><span class="pre">swindon.guard()</span></code>. It follows “fluent” pattern on
+every method (except <a class="reference internal" href="basic_api.html#close" title="close"><code class="xref py py-meth docutils literal"><span class="pre">close()</span></code></a>), which means every method returns
+<code class="docutils literal"><span class="pre">this</span></code>, and method calls are chainable.</p>
+<dl class="method">
+<dt id="_Guard.init">
+<code class="descname">init</code><span class="sig-paren">(</span><em>method_name</em>, <em>args=[]</em>, <em>kwargs={}</em>, <em>callback=null</em><span class="sig-paren">)</span><a class="headerlink" href="#_Guard.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the server method <code class="docutils literal"><span class="pre">method_name</span></code> as part of guard initialization.
+Basically this means call the method when <code class="docutils literal"><span class="pre">init()</span></code> called and every
+time connection is establishes, until guard is closed.</p>
+<p>Except being called on each reconnect and that it returns guard,
+it resembles semantics of <code class="xref py py-meth docutils literal"><span class="pre">Swindon.call()</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">callback</span></code> is a function called with result of method call. It may
+be called multiple times.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="_Guard.deinit">
+<code class="descname">deinit</code><span class="sig-paren">(</span><em>method_name</em>, <em>args=[]</em>, <em>kwargs={}</em>, <em>callback=null</em><span class="sig-paren">)</span><a class="headerlink" href="#_Guard.deinit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the server method <code class="docutils literal"><span class="pre">method_name</span></code> on <code class="docutils literal"><span class="pre">guard.close()</span></code>. This
+should be used to unsubscribe to all resources that were subscribed
+in <code class="docutils literal"><span class="pre">init</span></code>.</p>
+<p>While technically you can call <code class="docutils literal"><span class="pre">swindon.call()</span></code> at the same time
+as <code class="docutils literal"><span class="pre">guard.close()</span></code>, the <code class="docutils literal"><span class="pre">deinit</span></code> method is a convenience helper
+to keep <code class="docutils literal"><span class="pre">init</span></code> and <code class="docutils literal"><span class="pre">deinit</span></code> in the same place.</p>
+<p><code class="docutils literal"><span class="pre">callback</span></code> is a function called with result of method call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="_Guard.listen">
+<code class="descname">listen</code><span class="sig-paren">(</span><em>topic</em>, <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#_Guard.listen" title="Permalink to this definition">¶</a></dt>
+<dd><p>A (client-side) subscription to the topic.</p>
+<p><code class="docutils literal"><span class="pre">callback(data,</span> <span class="pre">metadata)</span></code> is a function called when data arrives
+for specified topic. Data is completely opaque from swindon and is what
+swindon receives. The only guaranteed field in <code class="docutils literal"><span class="pre">metadata</span></code> is
+<code class="docutils literal"><span class="pre">topic</span></code> which represents topic this callback subscribed to. Refer to
+swindon docs for more info on <code class="docutils literal"><span class="pre">metadata</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Library doesn’t ensure that this connection is subscribed
+to the specified topic in swindon itself. It’s your responsibility
+to make sure that backend call executed in <code class="docutils literal"><span class="pre">init</span></code> subscribes
+current connection to specified <code class="docutils literal"><span class="pre">topic</span></code> using the <a class="reference external" href="https://swindon-rs.github.io/swindon/swindon-lattice/backend.html#pub-sub-subscriptions">API</a>, and that it unsubscribes in <code class="docutils literal"><span class="pre">deinit</span></code>. Guard
+frees resources occupied by client-side subscription in <code class="docutils literal"><span class="pre">close</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="_Guard.lattice">
+<code class="descname">lattice</code><span class="sig-paren">(</span><em>namespace</em>, <em>prefix</em>, <em>lattice_object</em><span class="sig-paren">)</span><a class="headerlink" href="#_Guard.lattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers lattice object within this guard. All callback and state
+management is implemented in <a class="reference internal" href="lattice.html#Lattice" title="Lattice"><code class="xref py py-class docutils literal"><span class="pre">Lattice</span></code></a> itself.</p>
+<p>The respective class lattice tracks all the keys prefixed by <code class="docutils literal"><span class="pre">prefix</span></code>
+with the prefix itself removed. This allows easy composition of
+lattices from different applications without applications themselves
+managing the prefix.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Library doesn’t ensure that this connection is subscribed
+to the specified topic in swindon itself. It’s your responsibility
+to make sure that backend call executed in <code class="docutils literal"><span class="pre">init</span></code> subscribes
+current connection to specified <code class="docutils literal"><span class="pre">lattice</span></code> with neede keys
+using the <a class="reference external" href="https://swindon-rs.github.io/swindon/swindon-lattice/backend.html#lattice-subscriptions">API</a>, and that it unsubscribes in <code class="docutils literal"><span class="pre">deinit</span></code>.
+Guard frees resources occupied by client-side subscription
+in <code class="docutils literal"><span class="pre">close</span></code>.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Stateful API</a><ul>
+<li><a class="reference internal" href="#look-a-like">Look-a-like</a></li>
+<li><a class="reference internal" href="#api-description">API Description</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="basic_api.html" title="previous chapter">Basic API</a></li>
+      <li>Next: <a href="lattice.html" title="next chapter">Lattice</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/stateful_api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, EVO.company.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/stateful_api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

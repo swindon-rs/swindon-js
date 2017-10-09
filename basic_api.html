@@ -1,0 +1,275 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Basic API &#8212; Swindon.js 0.5.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Stateful API" href="stateful_api.html" />
+    <link rel="prev" title="Welcome to Swindon.js’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="basic-api">
+<span id="id1"></span><h1>Basic API<a class="headerlink" href="#basic-api" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Swindon">
+<em class="property">class </em><code class="descname">Swindon</code><span class="sig-paren">(</span><em>url</em>, <em>{onStateChange</em>, <em>defaultActiveTime}</em><span class="sig-paren">)</span><a class="headerlink" href="#Swindon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of swindon.</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">url</span></code></dt>
+<dd>the websocket url to connect to. The library will try to
+connect immediately and reconnect every time. You can use
+<code class="docutils literal"><span class="pre">onStateChange</span></code> and <code class="docutils literal"><span class="pre">status()</span></code> and <code class="docutils literal"><span class="pre">waitConnected()</span></code> to track
+when connection is established.</dd>
+<dt><code class="docutils literal"><span class="pre">onStateChange</span></code></dt>
+<dd><p class="first">callback which is called when connection state is
+changed. Callback is passed the result of a method <code class="docutils literal"><span class="pre">state()</span></code>.</p>
+<p>Example of callback that displays status for user:</p>
+<div class="highlight-js"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">update_status</span><span class="p">(</span><span class="nx">state</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Websocket status changed&quot;</span><span class="p">,</span> <span class="nx">state</span><span class="p">)</span>
+    <span class="k">switch</span><span class="p">(</span><span class="nx">state</span><span class="p">.</span><span class="nx">status</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="s2">&quot;wait&quot;</span><span class="o">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">state</span><span class="p">.</span><span class="nx">last_fatal_error</span> <span class="o">&amp;&amp;</span>
+               <span class="nx">state</span><span class="p">.</span><span class="nx">last_fatal_error</span><span class="p">.</span><span class="nx">metadata</span><span class="p">.</span><span class="nx">http_error</span> <span class="o">==</span> <span class="mi">403</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">// This probably means your session has expired</span>
+                <span class="nx">location</span><span class="p">.</span><span class="nx">assign</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="kd">let</span> <span class="nx">left</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">((</span><span class="nx">state</span><span class="p">.</span><span class="nx">reconnect_time</span>
+                                   <span class="o">-</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">())</span><span class="o">/</span><span class="mi">1000</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">left</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">set_status</span><span class="p">(</span><span class="s2">&quot;Reconnecting...&quot;</span><span class="p">)</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nx">set_status</span><span class="p">(</span><span class="s2">&quot;Reconnecting in &quot;</span> <span class="o">+</span> <span class="nx">left</span> <span class="o">+</span> <span class="s2">&quot; seconds&quot;</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="s2">&quot;active&quot;</span><span class="o">:</span>
+            <span class="nx">set_status</span><span class="p">(</span><span class="s2">&quot;Connected&quot;</span><span class="p">);</span> <span class="c1">// Probably should be hidden</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="s2">&quot;connecting&quot;</span><span class="o">:</span>
+            <span class="nx">set_status</span><span class="p">(</span><span class="s2">&quot;Connecting...&quot;</span><span class="p">)</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="s2">&quot;unsupported&quot;</span><span class="o">:</span>
+            <span class="nx">set_status</span><span class="p">(</span><span class="s2">&quot;WebSockets are unsupported by browser&quot;</span><span class="p">)</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="k">default</span><span class="o">:</span>
+            <span class="c1">// it&#39;s &quot;closed&quot; or maybe some future value</span>
+            <span class="nx">set_status</span><span class="p">(</span><span class="s2">&quot;No connection.&quot;</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="last">Note: technically the example above requires calling <code class="docutils literal"><span class="pre">set_status</span></code>
+every second to update UI. We don’t call <code class="docutils literal"><span class="pre">onStateChange</span></code> periodially,
+this is a responsibility of the application. Use <code class="docutils literal"><span class="pre">state()</span></code> to fetch
+up to date state on such periodic callback.</p>
+</dd>
+<dt><code class="docutils literal"><span class="pre">defaultActiveTime</span></code></dt>
+<dd><p class="first">The amount of time we consider user active after sending any request
+to server. This corresponds to <code class="docutils literal"><span class="pre">active</span></code> field in client API.</p>
+<div class="last admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">We don’t have any way to cancel this value for some requests
+or to update it whatsoever. It should be doable, but we have no good
+idea for the API. Please file an issue if you need this or you
+know how API may look like.</p>
+</div>
+</dd>
+</dl>
+<p>It’s expected that this object is a singleton on any web page. You may
+put it into some global application object or module and give access
+to other modules.</p>
+<dl class="method">
+<dt id="reconnectNow">
+<code class="descname">reconnectNow</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reconnectNow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forcefully reconnect now. It works both, when timer is set and when
+connection is active. Usually, you may want to check <cite>state()</cite> to
+avoid race conditions between UI and connection state:</p>
+<div class="highlight-js"><div class="highlight"><pre><span></span><span class="k">if</span><span class="p">(</span><span class="nx">swindon</span><span class="p">.</span><span class="nx">state</span><span class="p">().</span><span class="nx">status</span> <span class="o">!=</span> <span class="s1">&#39;wait&#39;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">swindon</span><span class="p">.</span><span class="nx">reconnectNow</span><span class="p">()</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waitConnected">
+<code class="descname">waitConnected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#waitConnected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns promise which waits for connection to be established and
+<code class="docutils literal"><span class="pre">hello</span></code> handshake received. Then returns data from the <code class="docutils literal"><span class="pre">hello</span></code>
+message. When connection is broken the promise is reset again (i.e.
+new promise will be returned in subsequent call to <code class="docutils literal"><span class="pre">waitConnected</span></code>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="call">
+<code class="descname">call</code><span class="sig-paren">(</span><em>dotted_name</em>, <em>positional_args=[]</em>, <em>keyword_args={}</em><span class="sig-paren">)</span><a class="headerlink" href="#call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the server-side method. Method call may contain either positional
+or keyword (named) arguments or both of them. Depending on the language
+of backend these kinds of arguments cold be interchanged or not. It’s
+recommended to use either <code class="docutils literal"><span class="pre">positional_args</span></code> or <code class="docutils literal"><span class="pre">keyword_args</span></code> for
+any specific method but not both.</p>
+<p>The call returns a <code class="docutils literal"><span class="pre">Promise</span></code> which resolves either to result of a
+call on server side or the error. Currently we only propagate
+server-side errors, but in future version we will have client-side
+timeouts and an error when connection is broken</p>
+<p>When connection is not active, the calls are queued by relying on
+<code class="docutils literal"><span class="pre">waitConnected</span></code> future.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="guard">
+<code class="descname">guard</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#guard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns new guard. Guard object is used for subscriptions and for
+calling methods on each reconnect.</p>
+<p>See <a class="reference external" href="stateful_api">Stateful API</a> for more info.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="state">
+<code class="descname">state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns current state of the connection. State contains at least these
+fields:</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">status</span></code></dt>
+<dd><p class="first">One of the options:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">connecting</span></code> websocket connection started, but either is not
+established yet, or <code class="docutils literal"><span class="pre">hello</span></code> handshake messages is not received yet</li>
+<li><code class="docutils literal"><span class="pre">active</span></code> connection is active and operating, requests only work
+in this state</li>
+<li><code class="docutils literal"><span class="pre">wait</span></code> connection is broken and will reconnect later</li>
+<li><code class="docutils literal"><span class="pre">closed</span></code> the <a class="reference internal" href="#close" title="close"><code class="xref py py-meth docutils literal"><span class="pre">close()</span></code></a> called on connection</li>
+<li><code class="docutils literal"><span class="pre">unsupported</span></code> websocket is not supported by the browser,
+creating lattices, guards, and calling methods should work but,
+will never return successful result</li>
+</ul>
+</dd>
+</dl>
+<p><code class="docutils literal"><span class="pre">reconnect_time</span></code></p>
+<blockquote>
+<div>Only non-null in <code class="docutils literal"><span class="pre">wait</span></code> state. It represent the time when we
+will try to reconnect again (a <code class="docutils literal"><span class="pre">Date</span></code> object).</div></blockquote>
+<p><code class="docutils literal"><span class="pre">last_websocket_error</span></code></p>
+<blockquote>
+<div><p>Holds an instance of event object that encountered last time when
+websocket’s error has occured. Basically, if it’s not null, your
+connection was broken in unclean fashion.</p>
+<p>Field is reset when next <code class="docutils literal"><span class="pre">hello</span></code> event arrives.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">last_websocket_close</span></code></p>
+<blockquote>
+<div><p>Holds an instance of <code class="docutils literal"><span class="pre">CloseEvent</span></code> object encountered last time
+connection was closed. This object contains <code class="docutils literal"><span class="pre">code</span></code> and <code class="docutils literal"><span class="pre">reason</span></code>
+fields to find out the reason socket is closed.</p>
+<p>Field is reset when next <code class="docutils literal"><span class="pre">hello</span></code> event arrives.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">last_fatal_error</span></code></p>
+<blockquote>
+<div><p>Holds an instance of <code class="docutils literal"><span class="pre">FatalError</span></code> object of last error sent. It
+may be earlier error than <code class="docutils literal"><span class="pre">last_websocket_close</span></code> if there was
+attempt to reconnect after failure.</p>
+<p>Primary reason for looking at this error is to find out that connection
+is no longer authorized, since this is the only way to reliably
+transfer error from <code class="docutils literal"><span class="pre">/swindon/authorize_connection</span></code> handler to
+javascript application.</p>
+<p>Field is reset when next <code class="docutils literal"><span class="pre">hello</span></code> event arrives.</p>
+</div></blockquote>
+<p>More fields may be present for debugging purposes, we don’t document
+them yet. You can use introspection to find out fields, but you shouldn’t
+rely on them on any purposes other than debugging</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the connection.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to Swindon.js’s documentation!</a></li>
+      <li>Next: <a href="stateful_api.html" title="next chapter">Stateful API</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/basic_api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, EVO.company.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/basic_api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
