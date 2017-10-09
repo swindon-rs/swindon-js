@@ -65,7 +65,6 @@ export class _Connection {
       case 'error': {
         const promise = this._requests[meta.request_id]
         delete this._requests[meta.request_id]
-        // TODO(tailhook) wrap it into some error object
         if(promise) {
           promise.reject(new CallError(meta, data))
         } else {
@@ -79,13 +78,10 @@ export class _Connection {
         let callback = this._helloReject;
         this._helloAccept = null
         this._helloReject = null
-        const promise = this._requests[meta.request_id]
-        delete this._requests[meta.request_id]
-        // TODO(tailhook) wrap it into some error object
-        if(promise) {
-          promise.reject(new CallError(meta, data))
+        if(callback) {
+          callback(new FatalError(meta, data))
         } else {
-          console.error('Swindon: Unsolicited error reply',
+          console.error('Swindon: unhandled fatal error',
             meta.request_id, data)
         }
         return

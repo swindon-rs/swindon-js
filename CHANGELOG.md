@@ -1,6 +1,11 @@
 Swindon.js Changes By Version
 =============================
 
+v0.5.1
+------
+
+* Fixes bug in handling fatal errors
+* Fixes reporting of invalid messages from server (forward compatibility)
 
 v0.5.0
 ------

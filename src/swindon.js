@@ -95,7 +95,7 @@ export class Swindon {
       }
     }, err => {
       this._fatal_error = err
-      throw err
+      this._scheduleReconnect()
     })
   }
 

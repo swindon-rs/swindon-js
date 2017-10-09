@@ -6,7 +6,7 @@ import sinon from 'sinon';
 import { Server } from 'mock-socket';
 import regeneratorRuntime from 'regenerator-runtime'
 
-import { Swindon, CallError, Lattice } from './../lib/swindon';
+import { Swindon, CallError, FatalError, Lattice } from './../lib/swindon';
 
 
 const wsUrl = '/public';
@@ -90,6 +90,34 @@ describe('Swindon Public actions', () => {
           assert(error instanceof CallError)
           assert.deepEqual(error.data, "some_error")
           assert.deepEqual(error.metadata, {request_id: 1})
+        } finally {
+          swindon.close()
+          srv.close()
+        }
+    });
+    it('should raise fatal error', async () => {
+        const srv = new Server('/4-1');
+        srv.sendj = function(...args) {
+          srv.send(JSON.stringify(args))
+        }
+
+        srv.on('connection', (server) => {
+          srv.sendj('fatal_error', {http_error: 403}, "fatal_error")
+        });
+        try {
+          let accept
+          let wait_err = new Promise((a, _) => accept = a)
+          var swindon = new Swindon('/4-1', {
+            onStateChange(state) {
+              if(state.last_fatal_error) {
+                accept(state.last_fatal_error)
+              }
+            }
+          })
+          let error = await wait_err;
+          assert(error instanceof FatalError)
+          assert.deepEqual(error.data, "fatal_error")
+          assert.deepEqual(error.metadata, {http_error: 403})
         } finally {
           swindon.close()
           srv.close()
