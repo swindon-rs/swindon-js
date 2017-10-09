@@ -29,7 +29,8 @@ Basic API
                 console.log("Websocket status changed", state)
                 switch(state.status) {
                     case "wait":
-                        if(state.last_fatal_error.metadata.http_error == 401) {
+                        if(state.last_fatal_error &&
+                           state.last_fatal_error.metadata.http_error == 403) {
                             // This probably means your session has expired
                             location.assign('/login')
                         }
