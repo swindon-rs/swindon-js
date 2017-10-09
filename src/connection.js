@@ -139,7 +139,7 @@ export class _Connection {
 
       default:
         console.error('Unknown command, check SwindonJS version',
-          eventType, requestMeta, data)
+          eventType, meta, data)
         return
     }
   }
